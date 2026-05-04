@@ -4,10 +4,9 @@ import SignupPage from "../pages/auth/SignupPage";
 import VerifyPage from "../pages/auth/VerifyPage";
 import QuestionsPage from "../pages/questions/QuestionsPage";
 import QuestionDetailPage from "../pages/questions/QuestionDetailPage";
-// import SubmitPage from "../pages/submissions/SubmitPage";
-// import SubmissionResultPage from "../pages/submissions/SubmissionResultPage";
+import SubmitPage from "../pages/submissions/SubmitPage";
+import SubmissionResultPage from "../pages/submissions/SubmissionResultPage";
 import CreateQuestionPage from "../pages/questions/CreateQuestionPage";
-// import EditQuestionPage from "../pages/questions/EditQuestionPage";
 // import ReviewSubmissionPage from "../pages/review/ReviewSubmissionPage";
 
 import ProtectedRoute from "../components/common/ProtectedRoute";
@@ -29,8 +28,8 @@ export default function AppRoutes() {
 
         <Route path="/questions/:id" element={<QuestionDetailPage />} />
 
-        {/* <Route path="/submit/:questionId" element={<SubmitPage />} />
-        <Route path="/submission/:id" element={<SubmissionResultPage />} /> */}
+        <Route path="/submit/:questionId" element={<SubmitPage />} />
+        <Route path="/submissions/:id" element={<SubmissionResultPage />} />
 
       </Route>
 

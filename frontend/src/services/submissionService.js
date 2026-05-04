@@ -2,6 +2,7 @@ import api from "./api";
 
 export const createSubmission = async (data) => {
   const res = await api.post("/submissions", data);
+  // console.log("POSTING TO:", api.defaults.baseURL + "/submissions");
   return res.data;
 };
 

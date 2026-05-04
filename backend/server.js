@@ -19,7 +19,7 @@ const questionRoutes = require("./routes/questionRoutes");
 app.use("/api/questions", questionRoutes);
 
 const submissionRoutes = require("./routes/submissionRoutes");
-app.use("/api/submission", submissionRoutes);
+app.use("/api/submissions", submissionRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ err: "Route not found" });

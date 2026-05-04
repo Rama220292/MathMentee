@@ -12,6 +12,7 @@ const { createSubmissionSchema, updateSubmissionSchema, reviewSubmissionSchema} 
 // Student Routes
 router.post("/", verifyToken, verifyRole("student"), validate(createSubmissionSchema), submissionController.createSubmission);
 router.put("/:id", verifyToken, verifyRole("student"), validate(updateSubmissionSchema), submissionController.updateSubmission);
+router.get("/:id", verifyToken, verifyRole("student"), submissionController.getSubmissionById);
 
 // Teacher Routes
 router.put("/:id/review", verifyToken, verifyRole("teacher"), validate(reviewSubmissionSchema), submissionController.reviewSubmission);

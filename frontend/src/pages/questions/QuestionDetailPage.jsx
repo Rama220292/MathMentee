@@ -14,7 +14,7 @@ export default function QuestionDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // 🔥 Fetch question
+  //  Fetch question
   const fetchQuestion = async () => {
     try {
       const data = await getQuestionById(id);
@@ -28,17 +28,17 @@ export default function QuestionDetailPage() {
     fetchQuestion();
   }, [id]);
 
-  // 🔥 Format date
+  // Format date
   const formatDate = (date) => {
     return new Date(date).toLocaleString();
   };
 
-  // 🔥 Check if edited
+  // Check if edited
   const isEdited =
     question?.updatedAt &&
     question.updatedAt !== question.createdAt;
 
-  // 🔥 Delete handler
+  //  Delete handler
   const handleDelete = async () => {
     try {
       await deleteQuestion(id);
@@ -112,7 +112,7 @@ export default function QuestionDetailPage() {
           ))}
         </ul>
 
-        {/* ✅ Dates */}
+        {/* Dates */}
         <div className="mt-4 text-xs text-gray-400">
           <div>Created: {formatDate(question.createdAt)}</div>
 
@@ -121,7 +121,7 @@ export default function QuestionDetailPage() {
           )}
         </div>
 
-        {/* ✅ Actions */}
+        {/*  Actions */}
         <div className="flex justify-end gap-2 mt-6">
 
           <button

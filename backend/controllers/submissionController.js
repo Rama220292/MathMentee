@@ -119,6 +119,24 @@ const updateSubmission = async (req, res) => {
   }
 };
 
+// VIEW SUBMISSION (Student)
+
+const getSubmissionById = async (req, res) => {
+  try {
+    const submission = await Submission.findById(req.params.id)
+      .populate("questionId"); // important for your UI
+
+    if (!submission) {
+      return res.status(404).json({ err: "Submission not found" });
+    }
+
+    res.json(submission);
+
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+};
+
 // REVIEW SUBMISSION (Teacher)
 
 const reviewSubmission = async (req, res) => {
@@ -158,5 +176,6 @@ const reviewSubmission = async (req, res) => {
 module.exports = {
   createSubmission,
   updateSubmission,
+  getSubmissionById,
   reviewSubmission
 };

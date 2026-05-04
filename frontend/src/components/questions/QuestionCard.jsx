@@ -9,6 +9,7 @@ export default function QuestionCard({ question, refresh }) {
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const navigate = useNavigate()
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const handleDelete = async () => {
     const handleDelete = async () => {
@@ -49,26 +50,44 @@ export default function QuestionCard({ question, refresh }) {
 
         <div className="flex gap-2">
 
-            <button
-                onClick={() => navigate(`/questions/${question._id}`)}
-                className="px-3 py-1 bg-gray-700 text-white rounded"
-            >
-                View
-            </button>
 
-            <button
-                onClick={() => setOpen(true)}
-                className="px-3 py-1 bg-indigo-500 text-white rounded"
-            >
-                Edit
-            </button>
+                <div className="flex justify-between items-center mt-4">
+                    {/* Student view */}
+                    {user?.role === "student" && (
+                      <button
+                        onClick={() => navigate(`/submit/${question._id}`)}
+                        className="px-3 py-1 bg-green-500 text-white rounded"
+                      >
+                        Attempt Question
+                      </button>
+                    )}
 
-            <button
-                onClick={() => setConfirmOpen(true)}
-                className="px-3 py-1 bg-red-500 text-white rounded"
-            >
-                Delete
-            </button>
+                    {/* Teacher view */}
+                    {user?.role === "teacher" && (
+                      <div className="flex gap-2">
+                        <button
+                            onClick={() => navigate(`/questions/${question._id}`)}
+                            className="px-3 py-1 bg-gray-700 text-white rounded"
+                        >
+                            View
+                        </button>
+                        
+                        <button
+                          onClick={() => setOpen(true)}
+                          className="px-3 py-1 bg-indigo-500 text-white rounded"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => setConfirmOpen(true)}
+                          className="px-3 py-1 bg-red-500 text-white rounded"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                </div>
 
         </div>
       </div>
@@ -84,6 +103,8 @@ export default function QuestionCard({ question, refresh }) {
         {confirmOpen && (
             <ConfirmButton
                 message="Are you sure you want to delete this question?"
+                confirmText="Delete"
+                confirmType="danger"
                 onConfirm={handleDelete}
                 onCancel={() => setConfirmOpen(false)}
                 className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg animate-scaleIn"

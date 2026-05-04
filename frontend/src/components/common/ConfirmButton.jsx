@@ -1,4 +1,4 @@
-export default function ConfirmButton({ message, onConfirm, onCancel }) {
+export default function ConfirmButton({ message, onConfirm, onCancel, confirmText, confirmType = "primary" }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
 
@@ -23,9 +23,13 @@ export default function ConfirmButton({ message, onConfirm, onCancel }) {
 
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+            className={`px-4 py-2 rounded text-white ${
+              confirmType === "danger"
+                ? "bg-red-500 hover:bg-red-600"
+                : "bg-indigo-500 hover:bg-indigo-600"
+            }`}
           >
-            Delete
+            {confirmText || "Confirm"}
           </button>
 
         </div>
