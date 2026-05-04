@@ -140,7 +140,7 @@ export default function LoginForm() {
               Logging in...
             </span>
           ) : (
-            "Sign up" // or "Sign in"
+            "Login" 
           )}
           </button>
 
