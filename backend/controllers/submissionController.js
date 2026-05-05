@@ -120,16 +120,27 @@ const updateSubmission = async (req, res) => {
   }
 };
 
-// VIEW SUBMISSION (Student)
+// VIEW SUBMISSION (Student & Teacher; )
 
 const getSubmissionById = async (req, res) => {
   try {
     const submission = await Submission.findById(req.params.id)
-      .populate("questionId"); 
+      .populate("questionId")
+      .populate("studentId", "name email");
 
     if (!submission) {
       return res.status(404).json({ err: "Submission not found" });
     }
+
+    // Access control to only allow student to see their own submissions
+    if (
+      req.user.role === "student" &&
+      submission.studentId._id.toString() !== req.user.id
+    ) {
+      return res.status(403).json({ err: "Not authorized" });
+    }
+
+    // Teachers can view all → no restriction
 
     res.json(submission);
 
@@ -189,9 +200,44 @@ const getMySubmissions = async (req, res) => {
   }
 };
 
+// View all Submissions (Teacher)
+
+const getAllSubmissions = async (req, res) => {
+  try {
+    const submissions = await Submission.find()
+      .populate("questionId")
+      .populate("studentId", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(submissions);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ err: err.message });
+  }
+};
+
+const getPendingSubmissions = async (req, res) => {
+  try {
+    const submissions = await Submission.find({
+      review_status: { $ne: "reviewed" }
+    })
+      .populate("questionId")
+      .populate("studentId", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(submissions);
+
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+};
+
 module.exports = {
   createSubmission,
   updateSubmission,
   getSubmissionById,
   reviewSubmission,
-  getMySubmissions};
+  getMySubmissions,
+  getAllSubmissions,
+  getPendingSubmissions };

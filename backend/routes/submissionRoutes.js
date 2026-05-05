@@ -13,8 +13,15 @@ const { createSubmissionSchema, updateSubmissionSchema, reviewSubmissionSchema }
 router.post("/", verifyToken, verifyRole("student"), validate(createSubmissionSchema), submissionController.createSubmission);
 router.put("/:id", verifyToken, verifyRole("student"), validate(updateSubmissionSchema), submissionController.updateSubmission);
 router.get("/my", verifyToken, verifyRole("student"), submissionController.getMySubmissions);
-router.get("/:id", verifyToken, verifyRole("student"), submissionController.getSubmissionById);
 
+// Teacher Routes
+router.get("/", verifyToken, verifyRole("teacher"), submissionController.getAllSubmissions);
+router.get("/pending", verifyToken, verifyRole("teacher"), submissionController.getPendingSubmissions);
+router.get("/:id/review", verifyToken, verifyRole("teacher"), submissionController.getSubmissionById);
 router.put("/:id/review", verifyToken, verifyRole("teacher"), validate(reviewSubmissionSchema), submissionController.reviewSubmission);
 
+// Shared Routes
+router.get("/:id", verifyToken, submissionController.getSubmissionById);
+
 module.exports = router;
+

@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { updateSubmission } from "../../services/submissionService";
+import { reviewSubmission } from "../../services/submissionService";
 import { useNavigate } from "react-router-dom";
 
 export default function ReviewSubmissionForm({ submission }) {
@@ -15,7 +15,7 @@ export default function ReviewSubmissionForm({ submission }) {
 
   const onSubmit = async (data) => {
     try {
-      await updateSubmission(submission._id, {
+      await reviewSubmission(submission._id, {
         teacher_score: data.teacher_score,
         teacher_feedback: data.teacher_feedback,
         review_status: "reviewed"

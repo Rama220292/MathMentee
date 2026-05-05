@@ -16,7 +16,7 @@ export const getSubmissionById = async (id) => {
 };
 
 export const getSubmissions = async () => {
-  const res = await api.get("/submissions");
+  const res = await api.get("/submissions/");
   return res.data;
 };
 
