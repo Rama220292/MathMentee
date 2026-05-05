@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getSubmissionById } from "../../services/submissionService";
+import { ArrowLeft } from "lucide-react";
 
 import SubmissionResult from "../../components/results/SubmissionResult";
 import ReviewSubmissionForm from "../../components/review/ReviewSubmissionForm";
@@ -8,6 +9,7 @@ import ReviewSubmissionForm from "../../components/review/ReviewSubmissionForm";
 export default function ReviewSubmissionPage() {
   const { id } = useParams();
   const [submission, setSubmission] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetch = async () => {
@@ -46,6 +48,17 @@ export default function ReviewSubmissionPage() {
         <h1 className="text-3xl font-semibold text-white text-center mb-6">
           Review Submission
         </h1>
+        
+        {/* Back Button */}
+        <div className="mb-4">
+          <button
+            onClick={() => navigate("/teacher/submissions")}
+            className="px-4 py-2 bg-white/90 text-gray-800 rounded-lg shadow hover:bg-white transition"
+          >
+            <ArrowLeft size={18} />
+            Back to Submissions
+          </button>
+        </div>
 
         {/* Main Content Card */}
         <div className="bg-white p-6 rounded-2xl shadow-lg space-y-6">
