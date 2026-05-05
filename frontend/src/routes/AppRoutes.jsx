@@ -7,10 +7,13 @@ import QuestionDetailPage from "../pages/questions/QuestionDetailPage";
 import SubmitPage from "../pages/submissions/SubmitPage";
 import SubmissionResultPage from "../pages/submissions/SubmissionResultPage";
 import CreateQuestionPage from "../pages/questions/CreateQuestionPage";
-// import ReviewSubmissionPage from "../pages/review/ReviewSubmissionPage";
+import ReviewSubmissionPage from "../pages/review/ReviewSubmissionPage";
+import StudentSubmissionsPage from "../pages/submissions/StudentSubmissionsPage";
+
 
 import ProtectedRoute from "../components/common/ProtectedRoute";
 import RoleGuard from "../components/common/RoleGuard";
+import SubmissionsPage from "../pages/submissions/SubmissionsPage";
 
 export default function AppRoutes() {
   return (
@@ -30,6 +33,8 @@ export default function AppRoutes() {
 
         <Route path="/submit/:questionId" element={<SubmitPage />} />
         <Route path="/submissions/:id" element={<SubmissionResultPage />} />
+        <Route path="/submissions/" element={<StudentSubmissionsPage />} />
+        
 
       </Route>
 
@@ -37,8 +42,8 @@ export default function AppRoutes() {
       <Route element={<RoleGuard role="teacher" />}>
         
         <Route path="/questions/create" element={<CreateQuestionPage />} />
-        {/* <Route path="/edit-question/:id" element={<EditQuestionPage />} />
-        <Route path="/review/:submissionId" element={<ReviewSubmissionPage />} /> */}
+        <Route path="/teacher/submissions" element={<SubmissionsPage />} />
+        <Route path="/submissions/:id/review" element={<ReviewSubmissionPage />} />
 
       </Route>
 

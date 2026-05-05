@@ -1,38 +1,32 @@
 import { useEffect, useState } from "react";
-import { getSubmissions } from "../../services/submissionService";
+import { useParams } from "react-router-dom";
+import { getSubmissionById } from "../../services/submissionService";
 
-export default function ReviewPage() {
-  const [submissions, setSubmissions] = useState([]);
+import SubmissionResult from "../../components/results/SubmissionResult";
+import ReviewSubmissionForm from "../../components/review/ReviewSubmissionForm";
+
+export default function ReviewSubmissionPage() {
+  const { id } = useParams();
+  const [submission, setSubmission] = useState(null);
 
   useEffect(() => {
     const fetch = async () => {
-      const data = await getSubmissions();
-      setSubmissions(data);
+      const data = await getSubmissionById(id);
+      setSubmission(data);
     };
-
     fetch();
-  }, []);
+  }, [id]);
+
+  if (!submission) return <p>Loading...</p>;
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="max-w-5xl mx-auto p-6 space-y-6">
 
-      {submissions.map((s) => (
-        <div key={s._id} className="bg-white p-4 rounded-lg shadow">
+      {/* Show student + AI result */}
+      <SubmissionResult submission={submission} />
 
-          <h3 className="font-semibold">{s.question.title}</h3>
-
-          <p className="mt-2">{s.answer}</p>
-
-          <div className="mt-3 text-green-600">
-            Score: {s.score}
-          </div>
-
-          <div className="text-gray-600">
-            {s.feedback}
-          </div>
-
-        </div>
-      ))}
+      {/* Teacher grading */}
+      <ReviewSubmissionForm submission={submission} />
 
     </div>
   );

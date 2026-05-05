@@ -3,6 +3,7 @@ const Question = require("../models/Question");
 const gradeAnswer = require("../services/gradingService");
 const gradeWithAI = require("../services/aiService");
 const { createSubmissionSchema, updateSubmissionSchema, reviewSubmissionSchema } = require("../validators/submissionValidator");
+const mongoose = require("mongoose");
 
 // CREATE SUBMISSION (Student)
 const createSubmission = async (req, res) => {
@@ -124,7 +125,7 @@ const updateSubmission = async (req, res) => {
 const getSubmissionById = async (req, res) => {
   try {
     const submission = await Submission.findById(req.params.id)
-      .populate("questionId"); // important for your UI
+      .populate("questionId"); 
 
     if (!submission) {
       return res.status(404).json({ err: "Submission not found" });
@@ -173,9 +174,24 @@ const reviewSubmission = async (req, res) => {
   }
 };
 
+// View all Submissions (Student)
+
+const getMySubmissions = async (req, res) => {
+  try {
+    const submissions = await Submission.find({ studentId: req.user.id })
+      .populate("questionId")
+      .sort({ createdAt: -1 });
+
+    res.json(submissions);
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ err: err.message });
+  }
+};
+
 module.exports = {
   createSubmission,
   updateSubmission,
   getSubmissionById,
-  reviewSubmission
-};
+  reviewSubmission,
+  getMySubmissions};
