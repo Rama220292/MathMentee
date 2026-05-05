@@ -13,20 +13,23 @@ export default function SubmissionResult({ submission }) {
 
       <StudentAnswerPanel answer={submission.structured_answer} />
 
-      <ModelAnswerPanel model={submission.questionId.model_answer} />
+      <ModelAnswerPanel model={submission.questionId.model_answer} question={submission.questionId}/>
 
       <AIScorePanel
         score={submission.ai_score}
         feedback={submission.ai_feedback}
       />
+      
+      {submission.review_status === "reviewed" && (
+        <>
+          <MarkingBreakdown breakdown={submission.marks_breakdown} />
 
-      <MarkingBreakdown breakdown={submission.marks_breakdown} />
-
-      <FinalScoreSummary
-        score={submission.final_score}
-        feedback={submission.final_feedback}
-      />
-
+          <FinalScoreSummary
+            score={submission.final_score}
+            feedback={submission.final_feedback}
+          />
+        </>
+      )}
     </div>
   );
 }
