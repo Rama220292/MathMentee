@@ -8,64 +8,81 @@ export default function ReviewSubmissionForm({ submission }) {
 
   const { register, handleSubmit } = useForm({
     defaultValues: {
-      teacher_score: submission.final_score,
-      teacher_feedback: submission.final_feedback
+      teacher_score: submission.final_score || "",
+      teacher_feedback: submission.final_feedback || ""
     }
   });
 
   const onSubmit = async (data) => {
     try {
-      await reviewSubmission(submission._id, {
-        teacher_score: data.teacher_score,
-        teacher_feedback: data.teacher_feedback,
-        review_status: "reviewed"
-      });
+      
+      const score = Number(data.teacher_score);
+
+      
+      if (isNaN(score)) {
+        toast.error("Teacher score must be a valid number");
+        return;
+      }
+
+      const payload = {
+        teacher_score: score,
+        teacher_feedback: data.teacher_feedback || ""
+      };
+
+      console.log("FINAL PAYLOAD:", payload);
+
+      // 
+      await reviewSubmission(submission._id, payload);
 
       toast.success("Review saved");
-      navigate("/submissions");
+      navigate("/teacher/submissions");
 
-    } catch {
+    } catch (err) {
+      console.error("BACKEND ERROR:", err.response?.data || err);
       toast.error("Failed to save review");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-6 rounded-lg space-y-4">
-
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="bg-white p-6 rounded-lg space-y-4"
+    >
       <h2 className="text-lg font-semibold">Teacher Review</h2>
 
-      {/* AI score display */}
+      {/* AI Score */}
       <div>
         <p className="text-sm text-gray-500">AI Score</p>
         <p className="font-medium">{submission.ai_score}</p>
       </div>
 
-      {/* Teacher score */}
+      {/* Teacher Score */}
       <div>
-        <label>Teacher Score</label>
+        <label className="block mb-1">Teacher Score</label>
         <input
           type="number"
-          {...register("teacher_score")}
+          step="1"
+          {...register("teacher_score", { required: true })}
           className="w-full border p-2 rounded"
         />
       </div>
 
       {/* Feedback */}
       <div>
-        <label>Teacher Feedback</label>
+        <label className="block mb-1">Teacher Feedback</label>
         <textarea
           {...register("teacher_feedback")}
           className="w-full border p-2 rounded"
         />
       </div>
 
+      {/* Submit */}
       <button
         type="submit"
-        className="px-4 py-2 bg-indigo-500 text-white rounded"
+        className="px-4 py-2 bg-indigo-500 text-white rounded hover:opacity-90"
       >
         Save Review
       </button>
-
     </form>
   );
 }

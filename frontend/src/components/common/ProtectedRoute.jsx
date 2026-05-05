@@ -1,4 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
+import Navbar from "./Navbar";
+
 
 export default function ProtectedRoute() {
   const token = localStorage.getItem("token");
@@ -7,5 +9,11 @@ export default function ProtectedRoute() {
     return <Navigate to="/login" />;
   }
 
-  return <Outlet />;
+  return (
+    <>
+      <Navbar />
+      <Outlet />    
+    </>
+
+  );
 }

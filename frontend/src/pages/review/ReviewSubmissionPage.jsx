@@ -20,14 +20,44 @@ export default function ReviewSubmissionPage() {
   if (!submission) return <p>Loading...</p>;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="min-h-screen flex items-center justify-center relative">
 
-      {/* Show student + AI result */}
-      <SubmissionResult submission={submission} />
+      {/* Background */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/images/Background_3.png')" }}
+      />
 
-      {/* Teacher grading */}
-      <ReviewSubmissionForm submission={submission} />
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />
 
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-5xl p-6">
+
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <img
+            src="/images/MMLogo.png"
+            className="w-32 md:w-40 object-contain"
+          />
+        </div>
+
+        {/* Page Title */}
+        <h1 className="text-3xl font-semibold text-white text-center mb-6">
+          Review Submission
+        </h1>
+
+        {/* Main Content Card */}
+        <div className="bg-white p-6 rounded-2xl shadow-lg space-y-6">
+
+          {/* Existing content */}
+          <SubmissionResult submission={submission} />
+
+          <ReviewSubmissionForm submission={submission} />
+
+        </div>
+
+      </div>
     </div>
   );
 }

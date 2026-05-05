@@ -74,7 +74,7 @@ return (
       {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/images/Background_2.png')" }}
+        style={{ backgroundImage: "url('/images/Background_3.png')" }}
       />
 
       {/* Overlay */}
