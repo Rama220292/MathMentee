@@ -1,4 +1,12 @@
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  FileText,
+  ClipboardList,
+  Settings,
+  MessageSquare,
+  LogOut
+} from "lucide-react";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -12,54 +20,82 @@ export default function Navbar() {
     navigate("/login");
   };
 
+  // 🔥 active style
+  const navBtn = ({ isActive }) =>
+    `flex items-center gap-2 px-4 py-2 text-sm font-medium text-white 
+     ${isActive ? "bg-indigo-700" : "bg-indigo-500 hover:bg-indigo-600"} 
+     transition`;
+
   return (
     <div className="w-full bg-white shadow-md px-6 py-3 flex justify-between items-center">
 
-      {/* Left: Logo / App name */}
+      {/* Logo */}
       <div
-        className="text-lg font-semibold cursor-pointer"
-        onClick={() => navigate("/questions")}
+        className="flex items-center gap-2 cursor-pointer"
+        onClick={() => navigate("/")}
       >
-        MathMentor
+        <img src="/images/MMIcon.png" className="w-8 h-8" />
+        <span className="text-lg font-semibold">MathMentor</span>
       </div>
 
-      {/* Middle: Links */}
-      <div className="flex gap-4 items-center">
+      {/* Links */}
+      <div className="flex gap-2">
 
-        <Link to="/questions" className="hover:text-indigo-500">
+        <NavLink to="/questions" className={navBtn}>
+          <FileText size={16} />
           Questions
-        </Link>
+        </NavLink>
 
-        {/* 🎓 Student links */}
+        {/* Student */}
         {role === "student" && (
-          <Link to="/submissions" className="hover:text-indigo-500">
-            My Submissions
-          </Link>
-        )}
-
-        {/* 👨‍🏫 Teacher links */}
-        {role === "teacher" && (
           <>
-            <Link to="/teacher/submissions" className="hover:text-indigo-500">
-              Review
-            </Link>
+            <NavLink to="/dashboard" className={navBtn}>
+              <LayoutDashboard size={16} />
+              Dashboard
+            </NavLink>
 
-            <Link to="/questions/create" className="hover:text-indigo-500">
-              Create
-            </Link>
+            <NavLink to="/submissions" className={navBtn}>
+              <ClipboardList size={16} />
+              Submissions
+            </NavLink>
           </>
         )}
 
+        {/* Teacher */}
+        {role === "teacher" && (
+          <>
+            <NavLink to="/teacher/dashboard" className={navBtn}>
+              <LayoutDashboard size={16} />
+              Students
+            </NavLink>
+
+            <NavLink to="/teacher/submissions" className={navBtn}>
+              <ClipboardList size={16} />
+              Review
+            </NavLink>
+          </>
+        )}
+
+        <NavLink to="/feedback" className={navBtn}>
+          <MessageSquare size={16} />
+          Feedback
+        </NavLink>
+
+        <NavLink to="/settings" className={navBtn}>
+          <Settings size={16} />
+          Settings
+        </NavLink>
+
       </div>
 
-      {/* Right: Logout */}
+      {/* Logout */}
       <button
         onClick={handleLogout}
-        className="px-3 py-1 bg-indigo-500 text-white rounded"
+        className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white hover:bg-red-600 transition"
       >
+        <LogOut size={16} />
         Logout
       </button>
-
     </div>
   );
 }

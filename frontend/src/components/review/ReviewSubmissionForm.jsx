@@ -15,10 +15,8 @@ export default function ReviewSubmissionForm({ submission }) {
 
   const onSubmit = async (data) => {
     try {
-      
       const score = Number(data.teacher_score);
 
-      
       if (isNaN(score)) {
         toast.error("Teacher score must be a valid number");
         return;
@@ -29,9 +27,6 @@ export default function ReviewSubmissionForm({ submission }) {
         teacher_feedback: data.teacher_feedback || ""
       };
 
-      console.log("FINAL PAYLOAD:", payload);
-
-      // 
       await reviewSubmission(submission._id, payload);
 
       toast.success("Review saved");
@@ -76,13 +71,27 @@ export default function ReviewSubmissionForm({ submission }) {
         />
       </div>
 
-      {/* Submit */}
-      <button
-        type="submit"
-        className="px-4 py-2 bg-indigo-500 text-white rounded hover:opacity-90"
-      >
-        Save Review
-      </button>
+      {/* Buttons */}
+      <div className="flex gap-2 pt-2">
+
+        {/* Cancel */}
+        <button
+          type="button"
+          onClick={() => navigate("/teacher/submissions")}
+          className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition"
+        >
+          Cancel
+        </button>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className="w-full px-4 py-2 bg-indigo-500 text-white rounded hover:opacity-90 transition"
+        >
+          Save Review
+        </button>
+
+      </div>
     </form>
   );
 }

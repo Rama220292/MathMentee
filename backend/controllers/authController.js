@@ -28,7 +28,7 @@ const signup = async (req, res) => {
       email,
       hashedPassword,
       role,
-      isVerified: true,
+      isVerified: false,
       verificationToken,
       verificationTokenExpiry
     });
@@ -109,4 +109,4 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-module.exports = { signup, login };
+module.exports = { signup, login, verifyEmail };

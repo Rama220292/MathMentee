@@ -1,40 +1,109 @@
-export default function ConfirmButton({ message, onConfirm, onCancel, confirmText, confirmType = "primary" }) {
+import { NavLink, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  FileText,
+  ClipboardList,
+  Settings,
+  MessageSquare,
+  LogOut
+} from "lucide-react";
+
+export default function Navbar() {
+  const navigate = useNavigate();
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const role = user?.role;
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
+  // 🔥 Rounded button style
+  const navBtn = ({ isActive }) =>
+    `flex items-center gap-2 px-4 py-2 text-sm font-medium 
+     rounded-xl transition shadow-sm
+     ${
+       isActive
+         ? "bg-indigo-600 text-white"
+         : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+     }`;
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+    <div className="w-full bg-white shadow-md px-6 py-3 flex justify-between items-center">
 
-      <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg">
+      {/* 🔷 Logo + App Name (rounded container) */}
+      <div
+        onClick={() => navigate("/")}
+        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-100 cursor-pointer hover:bg-indigo-200 transition"
+      >
+        <img src="/images/MMIcon.png" className="w-7 h-7 object-contain" />
+        <span className="text-sm font-semibold text-indigo-700">
+          MathMentor
+        </span>
+      </div>
 
-        <h2 className="text-lg font-semibold mb-2">
-          Confirm Action
-        </h2>
+      {/* 🔷 Navigation */}
+      <div className="flex gap-3">
 
-        <p className="text-gray-600 mb-4">
-          {message}
-        </p>
+        <NavLink to="/questions" className={navBtn}>
+          <FileText size={16} />
+          Questions
+        </NavLink>
 
-        <div className="flex justify-end gap-2">
+        {/* 🎓 Student */}
+        {role === "student" && (
+          <>
+            <NavLink to="/dashboard" className={navBtn}>
+              <LayoutDashboard size={16} />
+              Dashboard
+            </NavLink>
 
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-          >
-            Cancel
-          </button>
+            <NavLink to="/submissions" className={navBtn}>
+              <ClipboardList size={16} />
+              Submissions
+            </NavLink>
+          </>
+        )}
 
-          <button
-            onClick={onConfirm}
-            className={`px-4 py-2 rounded text-white ${
-              confirmType === "danger"
-                ? "bg-red-500 hover:bg-red-600"
-                : "bg-indigo-500 hover:bg-indigo-600"
-            }`}
-          >
-            {confirmText || "Confirm"}
-          </button>
+        {/* 👨‍🏫 Teacher */}
+        {role === "teacher" && (
+          <>
+            <NavLink to="/teacher/dashboard" className={navBtn}>
+              <LayoutDashboard size={16} />
+              Students
+            </NavLink>
 
-        </div>
+            <NavLink to="/teacher/submissions" className={navBtn}>
+              <ClipboardList size={16} />
+              Review
+            </NavLink>
+          </>
+        )}
+
+        <NavLink to="/feedback" className={navBtn}>
+          <MessageSquare size={16} />
+          Feedback
+        </NavLink>
+
+        <NavLink to="/settings" className={navBtn}>
+          <Settings size={16} />
+          Settings
+        </NavLink>
 
       </div>
+
+      {/* 🔴 Logout (rounded + distinct color) */}
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl 
+                   bg-red-100 text-red-600 hover:bg-red-200 transition shadow-sm"
+      >
+        <LogOut size={16} />
+        Logout
+      </button>
+
     </div>
   );
 }
