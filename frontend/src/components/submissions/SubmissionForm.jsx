@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react"
+import { useState } from "react";
 
 import StepInput from "./StepInput";
 import FinalAnswerInput from "./FinalAnswerInput";
@@ -20,8 +20,11 @@ const schema = z.object({
 });
 
 export default function SubmissionForm({ questionId }) {
-    const navigate = useNavigate()
-    const [confirmOpen, setConfirmOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [loading, setLoading] = useState(false); // 🔥 NEW
+
   const {
     control,
     register,
@@ -42,20 +45,25 @@ export default function SubmissionForm({ questionId }) {
   });
 
   const onSubmit = async (data) => {
+    setLoading(true); // 🔥 START loading
+
     try {
       const res = await createSubmission({
         questionId,
         raw_input: data.steps.map(s => s.content).join("\n"),
         structured_answer: {
-            steps: data.steps.map(s => s.content),
-            final_answer: data.final_answer
+          steps: data.steps.map(s => s.content),
+          final_answer: data.final_answer
         }
       });
 
       toast.success("Submitted!");
-      navigate(`/submissions/${res._id}`)
+      navigate(`/submissions/${res._id}`);
+
     } catch {
       toast.error("Submission failed");
+    } finally {
+      setLoading(false); // 🔥 STOP loading
     }
   };
 
@@ -74,44 +82,55 @@ export default function SubmissionForm({ questionId }) {
       {/* Final Answer */}
       <FinalAnswerInput register={register} errors={errors} />
 
-      {/* Submit */}
-        <div className="flex gap-2">
+      {/* Buttons */}
+      <div className="flex gap-2">
 
-            {/* Cancel */}
-            <button
-                type="button"
-                onClick={() => setConfirmOpen(true)}
-                className="w-full py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
-            >
-                Cancel
-            </button>
+        {/* Cancel */}
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          disabled={loading} // 🔥 disable during submit
+          className="w-full py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition disabled:opacity-50"
+        >
+          Cancel
+        </button>
 
-            {/* Submit */}
-            <button
-                type="submit"
-                className="w-full py-2 rounded-lg text-white font-medium 
-                bg-gradient-to-r from-purple-500 to-indigo-500"
-            >
-                Submit Answer
-            </button>
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={loading} // 🔥 disable
+          className={`w-full py-2 rounded-lg text-white font-medium 
+            bg-gradient-to-r from-purple-500 to-indigo-500 
+            transition flex items-center justify-center
+            ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90"}
+          `}
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              Submitting...
+            </span>
+          ) : (
+            "Submit Answer"
+          )}
+        </button>
 
-            {confirmOpen && (
-            <ConfirmButton
-                message="Discard your answer and go back?"
-                confirmText="Confirm"
-                confirmType="primary"
-                onConfirm={() => {
-                setConfirmOpen(false);
-                navigate("/questions");
-                }}
-                onCancel={() => setConfirmOpen(false)}
-            />
-            )}  
+        {/* Confirm Modal */}
+        {confirmOpen && (
+          <ConfirmButton
+            message="Discard your answer and go back?"
+            confirmText="Confirm"
+            confirmType="primary"
+            onConfirm={() => {
+              setConfirmOpen(false);
+              navigate("/questions");
+            }}
+            onCancel={() => setConfirmOpen(false)}
+          />
+        )}
 
-        </div>
+      </div>
 
     </form>
-
-    
   );
 }

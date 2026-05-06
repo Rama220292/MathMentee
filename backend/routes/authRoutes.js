@@ -7,6 +7,6 @@ const { signupSchema, loginSchema } = require("../validators/authValidator");
 
 router.post("/signup",  validate(signupSchema), authController.signup);
 router.post("/login", validate(loginSchema), authController.login);
-// router.get("/verify", authController.verifyEmail);
+router.get("/verify", authController.verifyEmail);
 
 module.exports = router;

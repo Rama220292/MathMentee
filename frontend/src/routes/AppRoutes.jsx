@@ -12,6 +12,7 @@ import StudentSubmissionsPage from "../pages/submissions/StudentSubmissionsPage"
 import ProtectedRoute from "../components/common/ProtectedRoute";
 import RoleGuard from "../components/common/RoleGuard";
 import SubmissionsPage from "../pages/submissions/SubmissionsPage";
+import HomeRedirect from "../pages/HomeRedirect";
 
 export default function AppRoutes() {
   return (
@@ -20,7 +21,8 @@ export default function AppRoutes() {
       {/* Public */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
-      <Route path="/verify" element ={<VerifyPage />} />
+      <Route path="/" element={<HomeRedirect />} />
+      {/* <Route path="/verify" element ={<VerifyPage />} /> */}
 
       {/* Protected (any logged-in user) */}
       <Route element={<ProtectedRoute />}>

@@ -33,7 +33,7 @@ export default function LoginForm() {
       localStorage.setItem("user", JSON.stringify(res.user));
       console.log(res);
       toast.success("Welcome back!");
-      navigate("/questions/create");
+      navigate("/");
     } catch (err) {
       toast.error(err.response?.data?.err || "Login failed");
     } finally {

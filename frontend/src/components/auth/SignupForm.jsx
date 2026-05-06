@@ -36,8 +36,11 @@ export default function SignupForm() {
 
     try {
       await signup(data);
-      toast.success("Signup successful. Please verify your email.");
-      navigate("/login");
+      localStorage.setItem("token", res.token);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      
+      toast.success("Signup successful.");
+      navigate("/");
     } catch (err) {
       toast.error(err.response?.data?.err || "Signup failed");
     } finally {
