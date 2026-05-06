@@ -35,12 +35,13 @@ export default function SignupForm() {
     setLoading(true);
 
     try {
-      await signup(data);
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
+      const res = await signup(data);
+      // localStorage.setItem("token", res.token);
+      // localStorage.setItem("user", JSON.stringify(res.user));
       
-      toast.success("Signup successful.");
+      toast.success("Signup successful. Check your email for verfication link.");
       navigate("/");
+
     } catch (err) {
       toast.error(err.response?.data?.err || "Signup failed");
     } finally {

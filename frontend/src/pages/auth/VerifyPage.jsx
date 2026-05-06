@@ -30,7 +30,7 @@ export default function VerifyPage() {
     };
 
     verify();
-  }, []);
+  }, [searchParams, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
