@@ -18,19 +18,19 @@ const signup = async (req, res) => {
 
     const hashedPassword = bcrypt.hashSync(password, saltRounds);
 
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationTokenExpiry = new Date(
-      Date.now() + 60 * 60 * 1000 // 1 hour
-    );
+    // const verificationToken = crypto.randomBytes(32).toString("hex");
+    // const verificationTokenExpiry = new Date(
+    //   Date.now() + 60 * 60 * 1000 // 1 hour
+    // );
 
     const user = await User.create({
       name,
       email,
       hashedPassword,
       role,
-      isVerified: true,
-      verificationToken,
-      verificationTokenExpiry
+      // isVerified: true,
+      // verificationToken,
+      // verificationTokenExpiry
     });
 
     // await sendVerificationEmail(user.email, verificationToken);
@@ -83,30 +83,30 @@ const login = async (req, res) => {
 };
 
 
-const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.query;
+// const verifyEmail = async (req, res) => {
+//   try {
+//     const { token } = req.query;
 
-    const user = await User.findOne({
-      verificationToken: token,
-      verificationTokenExpiry: { $gt: new Date() }
-    });
+//     const user = await User.findOne({
+//       verificationToken: token,
+//       verificationTokenExpiry: { $gt: new Date() }
+//     });
 
-    if (!user) {
-      return res.status(400).json({ err: "Invalid or expired token" });
-    }
+//     if (!user) {
+//       return res.status(400).json({ err: "Invalid or expired token" });
+//     }
 
-    user.isVerified = true;
-    user.verificationToken = null;
-    user.verificationTokenExpiry = null;
+//     user.isVerified = true;
+//     user.verificationToken = null;
+//     user.verificationTokenExpiry = null;
 
-    await user.save();
+//     await user.save();
 
-    res.json({ message: "Email verified successfully" });
+//     res.json({ message: "Email verified successfully" });
 
-  } catch (err) {
-    res.status(500).json({ err: err.message });
-  }
-};
+//   } catch (err) {
+//     res.status(500).json({ err: err.message });
+//   }
+// };
 
-module.exports = { signup, login, verifyEmail };
+module.exports = { signup, login };
