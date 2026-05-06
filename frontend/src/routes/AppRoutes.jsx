@@ -9,8 +9,6 @@ import SubmissionResultPage from "../pages/submissions/SubmissionResultPage";
 import CreateQuestionPage from "../pages/questions/CreateQuestionPage";
 import ReviewSubmissionPage from "../pages/review/ReviewSubmissionPage";
 import StudentSubmissionsPage from "../pages/submissions/StudentSubmissionsPage";
-
-
 import ProtectedRoute from "../components/common/ProtectedRoute";
 import RoleGuard from "../components/common/RoleGuard";
 import SubmissionsPage from "../pages/submissions/SubmissionsPage";
