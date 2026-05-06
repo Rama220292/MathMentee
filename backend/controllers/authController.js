@@ -28,7 +28,7 @@ const signup = async (req, res) => {
       email,
       hashedPassword,
       role,
-      // isVerified: true,
+      isVerified: true,
       // verificationToken,
       // verificationTokenExpiry
     });
