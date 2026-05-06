@@ -28,12 +28,12 @@ const signup = async (req, res) => {
       email,
       hashedPassword,
       role,
-      isVerified: false,
+      isVerified: true,
       verificationToken,
       verificationTokenExpiry
     });
 
-    await sendVerificationEmail(user.email, verificationToken);
+    // await sendVerificationEmail(user.email, verificationToken);
 
     res.status(201).json({
       message: "Account created. Please check your email to verify."
