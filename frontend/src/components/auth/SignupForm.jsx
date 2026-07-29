@@ -16,7 +16,7 @@ const schema = z.object({
     .regex(/[A-Z]/, "Must include uppercase")
     .regex(/[0-9]/, "Must include number")
     .regex(/[^a-zA-Z0-9]/, "Must include special character"),
-  role: z.enum(["student", "teacher"])
+  role: z.enum(["student", "teacher", "content_manager"])
 });
 
 export default function SignupForm() {
@@ -148,6 +148,7 @@ export default function SignupForm() {
               <option value="">Select role</option>
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
+              <option value="content_manager">Content Manager</option>
             </select>
             <p className="text-red-500 text-sm mt-1">
               {errors.role?.message}

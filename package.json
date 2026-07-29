@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",
+    "graphify": "^1.0.0",
+    "graphifyy": "^0.10.0",
     "tailwindcss": "^4.2.4"
   }
 }

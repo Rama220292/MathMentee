@@ -21,7 +21,9 @@ const signupSchema = Joi.object({
 
   password: passwordSchema,
 
-  role: Joi.string().valid("student", "teacher").required()
+  role: Joi.string()
+    .valid("student", "teacher", "content_manager")
+    .required()
 });
 
 const loginSchema = Joi.object({
