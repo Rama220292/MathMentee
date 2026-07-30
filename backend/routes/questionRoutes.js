@@ -8,11 +8,11 @@ const { createQuestionSchema, updateQuestionSchema } = require("../validators/qu
 const questionController = require("../controllers/questionController");
 const { objectIdSchema } = require("../validators/commonValidator");
 
-router.post("/", verifyToken, verifyRole("teacher"), validate(createQuestionSchema), questionController.createQuestion);
-router.put("/:id", verifyToken, verifyRole("teacher"), validate(updateQuestionSchema), questionController.updateQuestion);
-router.delete("/:id", verifyToken, verifyRole("teacher"), questionController.deleteQuestion);
+router.post("/", verifyToken, verifyRole("content_manager"), validate(createQuestionSchema), questionController.createQuestion);
+router.put("/:id", verifyToken, verifyRole("content_manager"), validate(updateQuestionSchema), questionController.updateQuestion);
+router.delete("/:id", verifyToken, verifyRole("content_manager"), questionController.deleteQuestion);
 router.get("/", verifyToken, questionController.getQuestions);
-router.get("/:id", verifyToken, validate(objectIdSchema), questionController.getQuestionById);
 router.get("/meta/options", verifyToken, questionController.getQuestionMeta);
+router.get("/:id", verifyToken, validate(objectIdSchema), questionController.getQuestionById);
 
 module.exports = router;

@@ -1,4 +1,4 @@
-const verifyRole = (requiredRole) => {
+const verifyRole = (...allowedRoles) => {
   return (req, res, next) => {
     try {
       // Check if user exists (from verifyToken)
@@ -7,7 +7,7 @@ const verifyRole = (requiredRole) => {
       }
 
       // Check role
-      if (req.user.role !== requiredRole) {
+      if (!allowedRoles.includes(req.user.role)) {
         return res.status(403).json({
           err: "Access denied: insufficient permissions"
         });

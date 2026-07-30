@@ -19,6 +19,8 @@ export default function HomeRedirect() {
         navigate("/questions");
       } else if (user?.role === "teacher") {
         navigate("/teacher/submissions");
+      } else if (user?.role === "content_manager") {
+        navigate("/questions");
       } else {
         navigate("/questions");
       }

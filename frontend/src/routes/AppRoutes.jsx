@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
 import VerifyPage from "../pages/auth/VerifyPage";
@@ -41,14 +41,16 @@ export default function AppRoutes() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/dashboard" element={<StudentDashboard />} />
         
-        {/* 👨‍🏫 Teacher routes INSIDE ProtectedRoute */}
-        <Route element={<RoleGuard role="teacher" />}>
-
-          <Route path="/questions/create" element={<CreateQuestionPage />} />
+        {/* Tutor and content-manager review routes */}
+        <Route element={<RoleGuard roles={["teacher", "content_manager"]} />}>
           <Route path="/teacher/submissions" element={<SubmissionsPage />} />
           <Route path="/submissions/:id/review" element={<ReviewSubmissionPage />} />
           <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+        </Route>
 
+        {/* Content-manager-only question authoring */}
+        <Route element={<RoleGuard roles={["content_manager"]} />}>
+          <Route path="/questions/create" element={<CreateQuestionPage />} />
         </Route>
 
       </Route>

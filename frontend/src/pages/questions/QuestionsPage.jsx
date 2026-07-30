@@ -12,6 +12,7 @@ export default function QuestionsPage() {
   const [topicFilter, setTopicFilter] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
   const navigate = useNavigate()
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const fetchQuestions = async () => {
     try {
@@ -82,12 +83,14 @@ export default function QuestionsPage() {
             Questions Dashboard
           </h1>
 
-          <button
-            onClick={() => navigate("/questions/create")}
-            className="px-4 py-2 bg-indigo-500 text-white rounded-lg shadow hover:opacity-90"
-          >
-            + Create New Question
-          </button>
+          {user?.role === "content_manager" && (
+            <button
+              onClick={() => navigate("/questions/create")}
+              className="px-4 py-2 bg-indigo-500 text-white rounded-lg shadow hover:opacity-90"
+            >
+              + Create New Question
+            </button>
+          )}
         </div>
 
         {/* ✅ 🔥 FILTERS GO HERE */}

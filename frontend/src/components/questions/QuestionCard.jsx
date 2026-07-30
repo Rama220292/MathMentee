@@ -12,24 +12,14 @@ export default function QuestionCard({ question, refresh }) {
   const user = JSON.parse(localStorage.getItem("user"));
 
   const handleDelete = async () => {
-    const handleDelete = async () => {
-        try {
-            await deleteQuestion(question._id);
-            toast.success("Deleted");
-            refresh();
-        } catch {
-            toast.error("Delete failed");
-        } finally {
-            setConfirmOpen(false);
-        }
-        };
-
     try {
       await deleteQuestion(question._id);
       toast.success("Deleted");
       refresh();
     } catch {
       toast.error("Delete failed");
+    } finally {
+      setConfirmOpen(false);
     }
   };
 
@@ -62,8 +52,8 @@ export default function QuestionCard({ question, refresh }) {
                       </button>
                     )}
 
-                    {/* Teacher view */}
-                    {user?.role === "teacher" && (
+                    {/* Content manager view */}
+                    {user?.role === "content_manager" && (
                       <div className="flex gap-2">
                         <button
                             onClick={() => navigate(`/questions/${question._id}`)}

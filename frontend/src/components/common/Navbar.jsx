@@ -62,7 +62,7 @@ export default function Navbar() {
         )}
 
         {/* Teacher */}
-        {role === "teacher" && (
+        {(role === "teacher" || role === "content_manager") && (
           <>
             <NavLink to="/teacher/dashboard" className={navBtn}>
               <LayoutDashboard size={16} />
@@ -74,6 +74,13 @@ export default function Navbar() {
               Review
             </NavLink>
           </>
+        )}
+
+        {role === "content_manager" && (
+          <NavLink to="/questions/create" className={navBtn}>
+            <FileText size={16} />
+            Create Question
+          </NavLink>
         )}
 
         <NavLink to="/feedback" className={navBtn}>

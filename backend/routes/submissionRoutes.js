@@ -15,13 +15,12 @@ router.put("/:id", verifyToken, verifyRole("student"), validate(updateSubmission
 router.get("/my", verifyToken, verifyRole("student"), submissionController.getMySubmissions);
 
 // Teacher Routes
-router.get("/", verifyToken, verifyRole("teacher"), submissionController.getAllSubmissions);
-router.get("/pending", verifyToken, verifyRole("teacher"), submissionController.getPendingSubmissions);
-router.get("/:id/review", verifyToken, verifyRole("teacher"), submissionController.getSubmissionById);
-router.put("/:id/review", verifyToken, verifyRole("teacher"), validate(reviewSubmissionSchema), submissionController.reviewSubmission);
+router.get("/", verifyToken, verifyRole("teacher", "content_manager"), submissionController.getAllSubmissions);
+router.get("/pending", verifyToken, verifyRole("teacher", "content_manager"), submissionController.getPendingSubmissions);
+router.get("/:id/review", verifyToken, verifyRole("teacher", "content_manager"), submissionController.getSubmissionById);
+router.put("/:id/review", verifyToken, verifyRole("teacher", "content_manager"), validate(reviewSubmissionSchema), submissionController.reviewSubmission);
 
 // Shared Routes
 router.get("/:id", verifyToken, submissionController.getSubmissionById);
 
 module.exports = router;
-
