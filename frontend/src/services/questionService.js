@@ -30,3 +30,8 @@ export const getQuestionMeta = async () => {
   const res = await api.get("/questions/meta/options");
   return res.data;
 };
+
+export const validateQuestionImage = async (data) => {
+  const res = await api.post("/questions/image-upload-requests/validate", data);
+  return res.data;
+};

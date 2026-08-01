@@ -1,5 +1,8 @@
 const Joi = require("joi");
 
+const MAX_QUESTION_IMAGE_SIZE = 10 * 1024 * 1024;
+const QUESTION_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 const stepSchema = Joi.object({
   content: Joi.string().required(),
   marks: Joi.number().min(1).required()
@@ -31,4 +34,14 @@ const updateQuestionSchema = createQuestionSchema.fork(
   (field) => field.optional()
 );
 
-module.exports = { createQuestionSchema, updateQuestionSchema};
+const questionImageUploadRequestSchema = Joi.object({
+  filename: Joi.string().trim().min(1).max(255).required(),
+  contentType: Joi.string().valid(...QUESTION_IMAGE_TYPES).required(),
+  size: Joi.number().integer().min(1).max(MAX_QUESTION_IMAGE_SIZE).required()
+});
+
+module.exports = {
+  createQuestionSchema,
+  updateQuestionSchema,
+  questionImageUploadRequestSchema
+};

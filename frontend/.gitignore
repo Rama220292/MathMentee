@@ -1,6 +1,12 @@
 # Created by https://www.toptal.com/developers/gitignore/api/windows,dotenv,java,vs
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,dotenv,java,vs
 
+.agents/
+.codex/
+.graphify/
+AGENTS.md
+graphify-out/
+
 ### dotenv ###
 .env
 dist/

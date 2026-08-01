@@ -45,6 +45,7 @@ Base path: `/api`. All request and response bodies are JSON. Protected endpoints
 | `GET` | `/questions/:id` | Any signed-in user | Fetch a question |
 | `PUT` | `/questions/:id` | Content manager (planned; teacher currently) | Update a question |
 | `DELETE` | `/questions/:id` | Content manager (planned; teacher currently) | Delete a question |
+| `POST` | `/questions/image-upload-requests/validate` | Content manager | Validate question-image metadata before requesting a private upload URL |
 | `GET` | `/questions/meta/options` | Any signed-in user | Available topic and level values |
 
 Under the planned tuition-centre model, `GET /questions` and student access to `GET /questions/:id` must return a student-safe representation that excludes model answers, mark allocations, authoring metadata, extraction data, and original source assets. Tutors receive the approved marking information needed for review; content managers receive the full authoring representation.

@@ -1,0 +1,5 @@
+# Graphify generated graphs, studios, caches, and local lifecycle state
+.graphify/
+
+# Legacy Graphify output directory
+graphify-out/

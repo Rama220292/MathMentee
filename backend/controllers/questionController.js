@@ -152,5 +152,28 @@ const getQuestionMeta = async (req, res) => {
   }
 };
 
+const validateQuestionImageUploadRequest = async (req, res) => {
+  res.json({
+    valid: true,
+    upload: {
+      filename: req.body.filename,
+      contentType: req.body.contentType,
+      size: req.body.size
+    },
+    constraints: {
+      maxSize: 10 * 1024 * 1024,
+      supportedTypes: ["image/jpeg", "image/png", "image/webp"]
+    }
+  });
+};
 
-module.exports = { createQuestion, getQuestions, getQuestionById, updateQuestion, deleteQuestion, getQuestionMeta }
+
+module.exports = {
+  createQuestion,
+  getQuestions,
+  getQuestionById,
+  updateQuestion,
+  deleteQuestion,
+  getQuestionMeta,
+  validateQuestionImageUploadRequest
+};
