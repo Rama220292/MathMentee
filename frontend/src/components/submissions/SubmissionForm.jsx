@@ -29,8 +29,7 @@ export default function SubmissionForm({ questionId }) {
     control,
     register,
     handleSubmit,
-    formState: { errors },
-    reset
+    formState: { errors }
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {

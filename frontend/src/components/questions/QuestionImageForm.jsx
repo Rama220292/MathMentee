@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
 
-import { validateQuestionImage } from "../../services/questionService";
+import {
+  createQuestionImageUploadRequest,
+  uploadQuestionImage
+} from "../../services/questionService";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -22,10 +25,9 @@ const schema = z.object({ image: imageSchema });
 
 export default function QuestionImageForm({ onBack, onValidated }) {
   const [previewUrl, setPreviewUrl] = useState("");
+  const [uploadResult, setUploadResult] = useState(null);
   const {
     handleSubmit,
-    register,
-    setValue,
     control,
     formState: { errors, isSubmitting }
   } = useForm({ resolver: zodResolver(schema) });
@@ -39,20 +41,31 @@ export default function QuestionImageForm({ onBack, onValidated }) {
     [previewUrl]
   );
 
-  const fileInput = register("image");
-
   const submitImage = async ({ image: selectedImage }) => {
+    setUploadResult(null);
+
     try {
-      const validation = await validateQuestionImage({
+      const uploadRequest = await createQuestionImageUploadRequest({
         filename: selectedImage.name,
         contentType: selectedImage.type,
         size: selectedImage.size
       });
+      const upload = await uploadQuestionImage(selectedImage, uploadRequest);
 
-      toast.success("Photo is ready to upload");
-      onValidated?.({ file: selectedImage, validation });
+      setUploadResult({
+        type: "success",
+        message: "Image uploaded successfully to secure S3 storage."
+      });
+      toast.success("Photo uploaded securely");
+      onValidated?.({ file: selectedImage, uploadRequest, upload });
     } catch (error) {
-      toast.error(error.response?.data?.err || "Photo validation failed");
+      const message =
+        error.response?.data?.err ||
+        error.message ||
+        "Could not upload question photo";
+
+      setUploadResult({ type: "error", message });
+      toast.error(message);
     }
   };
 
@@ -78,25 +91,30 @@ export default function QuestionImageForm({ onBack, onValidated }) {
           <span className="block text-sm text-gray-500 mt-1">
             JPEG, PNG, or WebP · maximum 10 MB
           </span>
-          <input
-            {...fileInput}
-            type="file"
-            accept={SUPPORTED_IMAGE_TYPES.join(",")}
-            capture="environment"
-            className="sr-only"
-            onChange={(event) => {
-              const selectedFile = event.target.files?.[0];
-              fileInput.onChange(event);
-              setValue("image", selectedFile, {
-                shouldDirty: true,
-                shouldValidate: true
-              });
-              setPreviewUrl(
-                selectedFile?.type.startsWith("image/")
-                  ? URL.createObjectURL(selectedFile)
-                  : ""
-              );
-            }}
+          <Controller
+            name="image"
+            control={control}
+            render={({ field: { name, onBlur, onChange, ref } }) => (
+              <input
+                ref={ref}
+                name={name}
+                type="file"
+                accept={SUPPORTED_IMAGE_TYPES.join(",")}
+                capture="environment"
+                className="sr-only"
+                onBlur={onBlur}
+                onChange={(event) => {
+                  const selectedFile = event.target.files?.[0];
+                  setUploadResult(null);
+                  onChange(selectedFile);
+                  setPreviewUrl(
+                    selectedFile?.type.startsWith("image/")
+                      ? URL.createObjectURL(selectedFile)
+                      : ""
+                  );
+                }}
+              />
+            )}
           />
         </label>
 
@@ -106,7 +124,27 @@ export default function QuestionImageForm({ onBack, onValidated }) {
           </p>
         )}
 
-        {previewUrl && (
+        {uploadResult && (
+          <div
+            role={uploadResult.type === "error" ? "alert" : "status"}
+            aria-live="polite"
+            className={`rounded-lg border px-4 py-3 text-sm ${
+              uploadResult.type === "success"
+                ? "border-green-300 bg-green-50 text-green-800"
+                : "border-red-300 bg-red-50 text-red-700"
+            }`}
+          >
+            <p className="font-medium">{uploadResult.message}</p>
+            {uploadResult.type === "success" && (
+              <p className="mt-1">
+                The database draft has not been created yet; that is the next
+                confirmation step.
+              </p>
+            )}
+          </div>
+        )}
+
+        {previewUrl && image instanceof File && (
           <figure className="rounded-xl overflow-hidden border bg-gray-50">
             <img
               src={previewUrl}

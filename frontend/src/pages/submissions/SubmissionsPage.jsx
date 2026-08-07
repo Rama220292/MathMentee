@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getSubmissions } from "../../services/submissionService";
 import ReviewCard from "../../components/review/ReviewCard";
 import SubmissionsFilters from "../../components/submissions/SubmissionsFilters";
@@ -10,7 +10,6 @@ export default function SubmissionsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [studentFilter, setStudentFilter] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
-  const [filtered, setFiltered] = useState([]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -28,7 +27,7 @@ export default function SubmissionsPage() {
     ...new Set(submissions.map((s) => s.questionId?.level))
   ];
 
-  useEffect(() => {
+  const filtered = useMemo(() => {
     let result = submissions;
 
     // 🔍 Search
@@ -64,8 +63,7 @@ export default function SubmissionsPage() {
       );
     }
 
-    setFiltered(result);
-
+    return result;
   }, [search, statusFilter, studentFilter, levelFilter, submissions]);
 
 return (

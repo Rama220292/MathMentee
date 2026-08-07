@@ -67,7 +67,7 @@ export default function CreateQuestionPage() {
                 Take or select a picture
               </span>
               <span className="block text-sm text-gray-600 mt-2">
-                Start from a photo, then review the extracted question content.
+                Start from a photo, then review the extracted    content.
               </span>
             </button>
           </div>
@@ -76,7 +76,7 @@ export default function CreateQuestionPage() {
 
       {validatedImage && (
         <p className="sr-only" aria-live="polite">
-          Question photo validated and ready for the upload step.
+          Question photo uploaded securely and ready for confirmation.
         </p>
       )}
     </div>

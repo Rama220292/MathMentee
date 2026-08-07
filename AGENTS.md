@@ -19,10 +19,10 @@ later increment and should not delay delivery of the image workflow.
 For the first image-based increment, prioritise this complete path:
 
 1. An authorised content manager takes a photo or selects an existing question
-   image.
+   image. (Done)
 2. The frontend form performs basic client-side checks, including supported file
-   type and maximum size, and displays an image preview.
-3. The frontend asks the backend for a short-lived, single-purpose upload URL.
+   type and maximum size, and displays an image preview.(Done)
+3. The frontend asks the backend for a short-lived, single-purpose upload URL.(Done)
 4. The frontend uses that URL to upload the image directly to a private S3
    bucket. Private source assets must not be exposed through public or
    student-facing APIs.

@@ -31,7 +31,31 @@ export const getQuestionMeta = async () => {
   return res.data;
 };
 
-export const validateQuestionImage = async (data) => {
-  const res = await api.post("/questions/image-upload-requests/validate", data);
+export const createQuestionImageUploadRequest = async (data) => {
+  const res = await api.post("/questions/image-upload-requests", data);
   return res.data;
+};
+
+export const uploadQuestionImage = async (file, uploadRequest) => {
+  let response;
+
+  try {
+    response = await fetch(uploadRequest.uploadUrl, {
+      method: "PUT",
+      headers: uploadRequest.headers,
+      body: file
+    });
+  } catch {
+    throw new Error(
+      "Could not reach S3. Check the bucket region and localhost CORS configuration."
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `S3 rejected the image upload (HTTP ${response.status}). Check the bucket region and IAM permission.`
+    );
+  }
+
+  return { objectKey: uploadRequest.objectKey };
 };

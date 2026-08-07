@@ -13,20 +13,26 @@ export default function QuestionDetailPage() {
   const [question, setQuestion] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-
-  //  Fetch question
-  const fetchQuestion = async () => {
-    try {
-      const data = await getQuestionById(id);
-      setQuestion(data);
-    } catch {
-      toast.error("Failed to load question");
-    }
-  };
+  const [refreshVersion, setRefreshVersion] = useState(0);
 
   useEffect(() => {
+    let active = true;
+
+    const fetchQuestion = async () => {
+      try {
+        const data = await getQuestionById(id);
+        if (active) setQuestion(data);
+      } catch {
+        if (active) toast.error("Failed to load question");
+      }
+    };
+
     fetchQuestion();
-  }, [id]);
+
+    return () => {
+      active = false;
+    };
+  }, [id, refreshVersion]);
 
   // Format date
   const formatDate = (date) => {
@@ -147,7 +153,7 @@ export default function QuestionDetailPage() {
         <EditQuestion
           question={question}
           close={() => setEditOpen(false)}
-          refresh={fetchQuestion}
+          refresh={() => setRefreshVersion((version) => version + 1)}
         />
       )}
 

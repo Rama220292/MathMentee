@@ -6,18 +6,15 @@ export default function VerifyPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const verificationStarted = useRef(false);
+  const token = searchParams.get("token");
 
-  const [status, setStatus] = useState("loading");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [status, setStatus] = useState(token ? "loading" : "error");
+  const [errorMessage, setErrorMessage] = useState(
+    token ? "" : "The verification link is missing its token."
+  );
 
   useEffect(() => {
-    const token = searchParams.get("token");
-
-    if (!token) {
-      setErrorMessage("The verification link is missing its token.");
-      setStatus("error");
-      return;
-    }
+    if (!token) return;
 
     if (verificationStarted.current) return;
     verificationStarted.current = true;
@@ -39,7 +36,7 @@ export default function VerifyPage() {
     };
 
     verify();
-  }, [searchParams, navigate]);
+  }, [token, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

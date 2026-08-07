@@ -18,11 +18,11 @@ router.delete("/:id", verifyToken, verifyRole("content_manager"), questionContro
 router.get("/", verifyToken, questionController.getQuestions);
 router.get("/meta/options", verifyToken, questionController.getQuestionMeta);
 router.post(
-  "/image-upload-requests/validate",
+  "/image-upload-requests",
   verifyToken,
   verifyRole("content_manager"),
   validate(questionImageUploadRequestSchema),
-  questionController.validateQuestionImageUploadRequest
+  questionController.createQuestionImageUploadRequest
 );
 router.get("/:id", verifyToken, validate(objectIdSchema), questionController.getQuestionById);
 

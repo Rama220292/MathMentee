@@ -45,7 +45,7 @@ Base path: `/api`. All request and response bodies are JSON. Protected endpoints
 | `GET` | `/questions/:id` | Any signed-in user | Fetch a question |
 | `PUT` | `/questions/:id` | Content manager (planned; teacher currently) | Update a question |
 | `DELETE` | `/questions/:id` | Content manager (planned; teacher currently) | Delete a question |
-| `POST` | `/questions/image-upload-requests/validate` | Content manager | Validate question-image metadata before requesting a private upload URL |
+| `POST` | `/questions/image-upload-requests` | Content manager | Validate image metadata and create a short-lived private S3 upload URL |
 | `GET` | `/questions/meta/options` | Any signed-in user | Available topic and level values |
 
 Under the planned tuition-centre model, `GET /questions` and student access to `GET /questions/:id` must return a student-safe representation that excludes model answers, mark allocations, authoring metadata, extraction data, and original source assets. Tutors receive the approved marking information needed for review; content managers receive the full authoring representation.
@@ -66,6 +66,35 @@ Question request shape:
   "isPublished": true
 }
 ```
+
+Question-image upload request:
+
+```json
+{ "filename": "question.png", "contentType": "image/png", "size": 123456 }
+```
+
+The server validates the metadata and returns a URL scoped to one generated
+object key for five minutes. The client must send the returned headers unchanged
+when uploading the file with `PUT`:
+
+```json
+{
+  "uploadUrl": "<short-lived presigned S3 URL>",
+  "objectKey": "question-source-images/<content-manager-id>/<upload-id>.png",
+  "expiresAt": "2026-08-06T02:05:00.000Z",
+  "headers": { "Content-Type": "image/png" }
+}
+```
+
+The bucket must remain private. `objectKey` is an internal asset reference, not
+a student-facing or public image URL. AWS credentials are resolved only by the
+backend using the standard AWS credential chain.
+
+After receiving this response, the browser uploads the original file directly
+to `uploadUrl` with `PUT` and the returned headers. A successful upload returns
+an empty S3 response; the frontend retains `objectKey` for the later upload
+confirmation request. The browser must never persist or expose `uploadUrl`,
+because it grants temporary write access to that one object key.
 
 ## Submissions
 

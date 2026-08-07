@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { getMySubmissions } from "../../services/submissionService";
-import { useNavigate } from "react-router-dom";
 import StudentSubmissionCard from "../../components/submissions/StudentSubmissionCard";
 
 
 export default function StudentSubmissionsPage() {
   const [submissions, setSubmissions] = useState([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetch = async () => {

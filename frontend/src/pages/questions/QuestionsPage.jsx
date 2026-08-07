@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import QuestionCard from "../../components/questions/QuestionCard";
@@ -7,28 +7,28 @@ import QuestionFilters from "../../components/questions/QuestionFilters";
 
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState([]);
-  const [filteredQuestions, setFilteredQuestions] = useState([]);
   const [search, setSearch] = useState("");
   const [topicFilter, setTopicFilter] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const navigate = useNavigate()
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
-  const fetchQuestions = async () => {
-    try {
-      const data = await getQuestions();
-      setQuestions(data);
-      setFilteredQuestions(data);
-    } catch {
-      toast.error("Failed to load questions");
-    }
-  };
   useEffect(() => {
-  fetchQuestions();
-  }, []);
-  
-  useEffect(() => {
-  let result = questions;
+    const fetchQuestions = async () => {
+      try {
+        const data = await getQuestions();
+        setQuestions(data);
+      } catch {
+        toast.error("Failed to load questions");
+      }
+    };
+
+    fetchQuestions();
+  }, [refreshVersion]);
+
+  const filteredQuestions = useMemo(() => {
+    let result = questions;
 
   // 🔍 Search (title, question_text, topic, level)
   if (search) {
@@ -50,7 +50,7 @@ export default function QuestionsPage() {
     result = result.filter((q) => q.level === levelFilter);
   }
 
-  setFilteredQuestions(result);
+    return result;
   }, [search, topicFilter, levelFilter, questions]);
 
   const topics = [...new Set(questions.map((q) => q.topic))];
@@ -110,7 +110,7 @@ export default function QuestionsPage() {
           <QuestionCard
             key={q._id}
             question={q}
-            refresh={fetchQuestions}
+            refresh={() => setRefreshVersion((version) => version + 1)}
           />
           ))}
         </div>

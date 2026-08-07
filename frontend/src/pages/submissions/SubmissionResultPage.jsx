@@ -2,12 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getSubmissionById } from "../../services/submissionService";
 
-import QuestionPanel from "../../components/results/QuestionPanel";
-import StudentAnswerPanel from "../../components/results/StudentAnswerPanel";
-import ModelAnswerPanel from "../../components/results/ModelAnswerPanel";
-import AIScorePanel from "../../components/results/AIScorePanel";
-import MarkingBreakdown from "../../components/results/MarkingBreakdown";
-import FinalScoreSummary from "../../components/results/FinalScoreSummary";
 import SubmissionResult from "../../components/results/SubmissionResult";
 
 

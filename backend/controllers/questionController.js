@@ -1,5 +1,8 @@
 const mongoose = require("mongoose")
 const Question = require("../models/Question");
+const {
+  createQuestionImageUpload
+} = require("../services/questionImageStorageService");
 
 const calculateTotalMarks = (model_answer, final_answer_marks) => {
   const stepMarks = model_answer.steps.reduce(
@@ -152,19 +155,22 @@ const getQuestionMeta = async (req, res) => {
   }
 };
 
-const validateQuestionImageUploadRequest = async (req, res) => {
-  res.json({
-    valid: true,
-    upload: {
-      filename: req.body.filename,
+const createQuestionImageUploadRequest = async (req, res) => {
+  try {
+    const upload = await createQuestionImageUpload({
+      userId: req.user.id,
       contentType: req.body.contentType,
       size: req.body.size
-    },
-    constraints: {
-      maxSize: 10 * 1024 * 1024,
-      supportedTypes: ["image/jpeg", "image/png", "image/webp"]
+    });
+
+    res.status(201).json(upload);
+  } catch (err) {
+    if (err.code === "STORAGE_NOT_CONFIGURED") {
+      return res.status(503).json({ err: err.message });
     }
-  });
+
+    res.status(500).json({ err: "Could not create question image upload" });
+  }
 };
 
 
@@ -175,5 +181,5 @@ module.exports = {
   updateQuestion,
   deleteQuestion,
   getQuestionMeta,
-  validateQuestionImageUploadRequest
+  createQuestionImageUploadRequest
 };
