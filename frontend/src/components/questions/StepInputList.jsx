@@ -9,13 +9,16 @@ export default function StepInputList({
     <div className="space-y-3">
 
       <h3 className="font-semibold text-gray-700">
-        Model Answer Steps
+        Worked solution and step marks
       </h3>
+      <p className="text-sm text-gray-500">
+        Review each proposed working step and assign the marks awarded for it.
+      </p>
 
       {/* Header */}
       <div className="flex gap-2 text-sm text-gray-500 px-1">
-        <div className="flex-1">Step</div>
-        <div className="w-20 text-center">Marks</div>
+        <div className="flex-1">Working or explanation</div>
+        <div className="w-20 text-center">Step marks</div>
       </div>
 
       {fields.map((field, index) => (
@@ -23,6 +26,7 @@ export default function StepInputList({
 
           {/* Step content */}
           <textarea
+            aria-label={`Working for step ${index + 1}`}
             {...register(`steps.${index}.content`)}
             placeholder={`Step ${index + 1}`}
             rows={2}
@@ -31,6 +35,7 @@ export default function StepInputList({
 
           {/* Marks */}
           <input
+            aria-label={`Marks for step ${index + 1}`}
             type="number"
             {...register(`steps.${index}.marks`, { valueAsNumber: true })}
             className="w-20 border rounded-lg px-2 py-2"

@@ -163,9 +163,13 @@ const onSubmit = async (data) => {
 
           {/* Title */}
           <div>
+            <label htmlFor="question-title" className="block text-sm font-medium text-gray-700 mb-1">
+              Question title
+            </label>
             <input
+              id="question-title"
               {...register("title")}
-              placeholder="Title"
+              placeholder="e.g. Solving a linear equation"
               className="w-full border px-3 py-2 rounded-lg"
             />
             <p className="text-red-500 text-sm">{errors.title?.message}</p>
@@ -173,9 +177,13 @@ const onSubmit = async (data) => {
 
           {/* Question */}
           <div>
+            <label htmlFor="question-text" className="block text-sm font-medium text-gray-700 mb-1">
+              Question text
+            </label>
             <textarea
+              id="question-text"
               {...register("question_text")}
-              placeholder="Question"
+              placeholder="Enter the complete question shown to students"
               rows={8}
               className="w-full border px-3 py-2 rounded-lg resize-y"
             />
@@ -188,8 +196,10 @@ const onSubmit = async (data) => {
           <div className="flex gap-2">
 
             <div className="flex-1">
-              <label className="text-sm font-medium">Topic</label>
-              <select {...register("topic")} className="border p-2 rounded-lg w-full">
+              <label htmlFor="question-topic" className="block text-sm font-medium text-gray-700 mb-1">
+                Topic
+              </label>
+              <select id="question-topic" {...register("topic")} className="border p-2 rounded-lg w-full">
                 <option value="">Select topic</option>
                 {topics.map((t) => (
                   <option key={t} value={t}>{t}</option>
@@ -199,8 +209,10 @@ const onSubmit = async (data) => {
             </div>
 
             <div className="flex-1">
-              <label className="text-sm font-medium">Level</label>
-              <select {...register("level")} className="border p-2 rounded-lg w-full">
+              <label htmlFor="question-level" className="block text-sm font-medium text-gray-700 mb-1">
+                Secondary level
+              </label>
+              <select id="question-level" {...register("level")} className="border p-2 rounded-lg w-full">
                 <option value="">Select level</option>
                 {levels.map((l) => (
                   <option key={l} value={l}>{l}</option>
@@ -213,10 +225,15 @@ const onSubmit = async (data) => {
 
           {/* Final Answer */}
           <div>
-            <input
+            <label htmlFor="final-answer" className="block text-sm font-medium text-gray-700 mb-1">
+              Final answer
+            </label>
+            <textarea
+              id="final-answer"
               {...register("final_answer")}
-              placeholder="Final Answer"
-              className="w-full border px-3 py-2 rounded-lg"
+              placeholder="Enter the answer students should reach"
+              rows={3}
+              className="w-full border px-3 py-2 rounded-lg resize-y"
             />
             <p className="text-red-500 text-sm">
               {errors.final_answer?.message}
@@ -225,11 +242,15 @@ const onSubmit = async (data) => {
 
           {/* Final Marks */}
           <div>
+            <label htmlFor="final-answer-marks" className="block text-sm font-medium text-gray-700 mb-1">
+              Marks for the final answer
+            </label>
             <input
+              id="final-answer-marks"
               type="number"
               inputMode="numeric"
               {...register("final_answer_marks", { valueAsNumber: true })}
-              placeholder="Final Answer Marks"
+              placeholder="e.g. 1"
               className="w-full border px-3 py-2 rounded-lg"
             />
             <p className="text-red-500 text-sm">
