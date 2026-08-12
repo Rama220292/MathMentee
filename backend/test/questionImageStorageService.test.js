@@ -4,7 +4,8 @@ const test = require("node:test");
 const {
   UPLOAD_URL_TTL_SECONDS,
   createQuestionImageUpload,
-  getStorageConfig
+  getStorageConfig,
+  verifyQuestionImageUpload
 } = require("../services/questionImageStorageService");
 
 test("creates a user-scoped, five-minute image upload", async () => {
@@ -45,6 +46,86 @@ test("creates a user-scoped, five-minute image upload", async () => {
     ContentType: "image/png",
     ContentLength: 1234
   });
+});
+
+test("verifies uploaded image metadata without downloading the object", async () => {
+  let headCommand;
+  const lastModified = new Date("2026-08-06T02:01:00.000Z");
+
+  const result = await verifyQuestionImageUpload(
+    {
+      objectKey: "question-source-images/user/upload.png",
+      expectedContentType: "image/png",
+      expectedSize: 1234
+    },
+    {
+      config: { region: "ap-southeast-1", bucket: "private-assets" },
+      client: {},
+      head: async (_client, command) => {
+        headCommand = command;
+        return {
+          ContentType: "image/png",
+          ContentLength: 1234,
+          ETag: "etag-value",
+          LastModified: lastModified
+        };
+      }
+    }
+  );
+
+  assert.deepEqual(headCommand.input, {
+    Bucket: "private-assets",
+    Key: "question-source-images/user/upload.png"
+  });
+  assert.deepEqual(result, {
+    contentType: "image/png",
+    size: 1234,
+    etag: "etag-value",
+    lastModified
+  });
+});
+
+test("rejects an uploaded image whose metadata differs from the request", async () => {
+  await assert.rejects(
+    verifyQuestionImageUpload(
+      {
+        objectKey: "question-source-images/user/upload.png",
+        expectedContentType: "image/png",
+        expectedSize: 1234
+      },
+      {
+        config: { region: "ap-southeast-1", bucket: "private-assets" },
+        client: {},
+        head: async () => ({
+          ContentType: "image/png",
+          ContentLength: 999
+        })
+      }
+    ),
+    { code: "UPLOAD_METADATA_MISMATCH" }
+  );
+});
+
+test("reports a missing uploaded image", async () => {
+  await assert.rejects(
+    verifyQuestionImageUpload(
+      {
+        objectKey: "question-source-images/user/missing.png",
+        expectedContentType: "image/png",
+        expectedSize: 1234
+      },
+      {
+        config: { region: "ap-southeast-1", bucket: "private-assets" },
+        client: {},
+        head: async () => {
+          const error = new Error("missing");
+          error.name = "NotFound";
+          throw error;
+        }
+      }
+    ),
+    { code: "UPLOAD_NOT_FOUND" }
+  );
 });
 
 test("fails clearly when S3 configuration is missing", () => {

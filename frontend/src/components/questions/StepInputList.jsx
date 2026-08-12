@@ -22,10 +22,11 @@ export default function StepInputList({
         <div key={field.id} className="flex gap-2 items-center">
 
           {/* Step content */}
-          <input
+          <textarea
             {...register(`steps.${index}.content`)}
             placeholder={`Step ${index + 1}`}
-            className="flex-1 border rounded-lg px-3 py-2"
+            rows={2}
+            className="flex-1 border rounded-lg px-3 py-2 resize-y"
           />
 
           {/* Marks */}

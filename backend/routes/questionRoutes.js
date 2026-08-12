@@ -7,6 +7,7 @@ const validate = require("../middleware/validate");
 const {
   createQuestionSchema,
   updateQuestionSchema,
+  questionImageUploadConfirmationSchema,
   questionImageUploadRequestSchema
 } = require("../validators/questionValidator");
 const questionController = require("../controllers/questionController");
@@ -23,6 +24,20 @@ router.post(
   verifyRole("content_manager"),
   validate(questionImageUploadRequestSchema),
   questionController.createQuestionImageUploadRequest
+);
+router.post(
+  "/image-upload-confirmations",
+  verifyToken,
+  verifyRole("content_manager"),
+  validate(questionImageUploadConfirmationSchema),
+  questionController.confirmQuestionImageUpload
+);
+router.post(
+  "/:id/extractions",
+  verifyToken,
+  verifyRole("content_manager"),
+  validate(objectIdSchema),
+  questionController.extractQuestionDraft
 );
 router.get("/:id", verifyToken, validate(objectIdSchema), questionController.getQuestionById);
 

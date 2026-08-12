@@ -129,7 +129,7 @@ const onSubmit = async (data) => {
 };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative">
+    <div className="min-h-screen flex items-start justify-center relative py-8">
 
       {/* Background */}
       <div
@@ -141,7 +141,7 @@ const onSubmit = async (data) => {
       <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />
 
       {/* Card */}
-      <div className="relative z-10 bg-white p-10 rounded-2xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative z-10 bg-white p-10 rounded-2xl shadow-lg w-full max-w-2xl">
 
         {/* Logo */}
         <div className="flex justify-center mb-4">
@@ -176,7 +176,8 @@ const onSubmit = async (data) => {
             <textarea
               {...register("question_text")}
               placeholder="Question"
-              className="w-full border px-3 py-2 rounded-lg"
+              rows={8}
+              className="w-full border px-3 py-2 rounded-lg resize-y"
             />
             <p className="text-red-500 text-sm">
               {errors.question_text?.message}

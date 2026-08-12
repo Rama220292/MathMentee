@@ -28,16 +28,26 @@ question-source prefix:
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": "s3:PutObject",
+      "Action": ["s3:PutObject", "s3:GetObject"],
       "Resource": "arn:aws:s3:::<private-bucket-name>/question-source-images/*"
     }
   ]
 }
 ```
 
-The later upload-confirmation increment will also require narrowly scoped
-`s3:HeadObject` access so the backend can validate that the expected object was
-uploaded before saving its key to a draft.
+S3 authorises `HeadObject` through the `s3:GetObject` IAM action; there is no
+separate `s3:HeadObject` action. The backend uses it only against the private
+question-source prefix to validate existence, content type, and size before
+saving an object key to a draft.
+
+## Upload confirmation
+
+Every presigned request is stored as a pending, owner-scoped MongoDB record.
+After the browser completes the `PUT`, it sends only the opaque upload ID to the
+backend. The backend resolves the expected key, rejects expired requests, and
+uses `HeadObject` without downloading the image body. A successful confirmation
+creates an unpublished question draft and makes repeated confirmation requests
+return that same draft.
 
 ## Bucket CORS
 
@@ -68,7 +78,8 @@ origin to use an otherwise valid presigned request.
 - Enable default server-side encryption (SSE-S3 is sufficient for this first
   increment; use SSE-KMS only if its operational overhead is required).
 - Disable ACLs with Bucket owner enforced object ownership.
-- Add a lifecycle rule for abandoned objects under `question-source-images/`
-  after the draft/confirmation lifecycle is implemented.
+- Add a lifecycle rule for abandoned objects under `question-source-images/`;
+  automated deletion of expired pending records and objects remains a later
+  operational increment.
 - Do not log bucket names, presigned URLs, or source object keys in
   student-facing responses.

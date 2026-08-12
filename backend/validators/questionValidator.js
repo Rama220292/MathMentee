@@ -40,8 +40,13 @@ const questionImageUploadRequestSchema = Joi.object({
   size: Joi.number().integer().min(1).max(MAX_QUESTION_IMAGE_SIZE).required()
 });
 
+const questionImageUploadConfirmationSchema = Joi.object({
+  uploadId: Joi.string().hex().length(24).required()
+});
+
 module.exports = {
   createQuestionSchema,
   updateQuestionSchema,
+  questionImageUploadConfirmationSchema,
   questionImageUploadRequestSchema
 };

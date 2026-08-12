@@ -57,5 +57,20 @@ export const uploadQuestionImage = async (file, uploadRequest) => {
     );
   }
 
-  return { objectKey: uploadRequest.objectKey };
+  return {
+    uploadId: uploadRequest.uploadId,
+    objectKey: uploadRequest.objectKey
+  };
+};
+
+export const confirmQuestionImageUpload = async (uploadId) => {
+  const res = await api.post("/questions/image-upload-confirmations", {
+    uploadId
+  });
+  return res.data;
+};
+
+export const extractQuestionDraft = async (draftId) => {
+  const res = await api.post(`/questions/${draftId}/extractions`);
+  return res.data;
 };

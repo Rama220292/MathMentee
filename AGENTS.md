@@ -24,11 +24,11 @@ For the first image-based increment, prioritise this complete path:
    type and maximum size, and displays an image preview.(Done)
 3. The frontend asks the backend for a short-lived, single-purpose upload URL.(Done)
 4. The frontend uses that URL to upload the image directly to a private S3
-   bucket. Private source assets must not be exposed through public or
-   student-facing APIs.
+    bucket. Private source assets must not be exposed through public or
+    student-facing APIs. (Done)
 5. The frontend tells the backend that the upload completed. After validating
-   the upload, the backend creates or updates the question draft with the S3
-   object key rather than a public image URL.
+    the upload, the backend creates or updates the question draft with the S3
+    object key rather than a public image URL. (Done)
 6. The backend starts extraction with a server-side provider such as OpenAI or
    Mathpix. Provider API keys and other secrets must remain on the server.
 7. Extraction returns editable question text and mathematical content together

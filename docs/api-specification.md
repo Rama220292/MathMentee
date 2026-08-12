@@ -46,6 +46,7 @@ Base path: `/api`. All request and response bodies are JSON. Protected endpoints
 | `PUT` | `/questions/:id` | Content manager (planned; teacher currently) | Update a question |
 | `DELETE` | `/questions/:id` | Content manager (planned; teacher currently) | Delete a question |
 | `POST` | `/questions/image-upload-requests` | Content manager | Validate image metadata and create a short-lived private S3 upload URL |
+| `POST` | `/questions/image-upload-confirmations` | Content manager | Verify the uploaded S3 object and create an unpublished question draft |
 | `GET` | `/questions/meta/options` | Any signed-in user | Available topic and level values |
 
 Under the planned tuition-centre model, `GET /questions` and student access to `GET /questions/:id` must return a student-safe representation that excludes model answers, mark allocations, authoring metadata, extraction data, and original source assets. Tutors receive the approved marking information needed for review; content managers receive the full authoring representation.
@@ -79,6 +80,7 @@ when uploading the file with `PUT`:
 
 ```json
 {
+  "uploadId": "<pending-upload-id>",
   "uploadUrl": "<short-lived presigned S3 URL>",
   "objectKey": "question-source-images/<content-manager-id>/<upload-id>.png",
   "expiresAt": "2026-08-06T02:05:00.000Z",
@@ -91,10 +93,45 @@ a student-facing or public image URL. AWS credentials are resolved only by the
 backend using the standard AWS credential chain.
 
 After receiving this response, the browser uploads the original file directly
-to `uploadUrl` with `PUT` and the returned headers. A successful upload returns
-an empty S3 response; the frontend retains `objectKey` for the later upload
-confirmation request. The browser must never persist or expose `uploadUrl`,
-because it grants temporary write access to that one object key.
+to `uploadUrl` with `PUT` and the returned headers. A successful S3 upload
+returns an empty response. The browser then confirms the opaque pending upload:
+
+```json
+{ "uploadId": "<pending-upload-id>" }
+```
+
+The backend resolves the expected private key from the owner-scoped pending
+upload record and calls S3 `HeadObject`. It requires the stored content type and
+size to match the original request before creating an unpublished question with
+`authoring_status: "uploaded"`. Confirmation returns only safe draft metadata:
+
+```json
+{
+  "draftId": "<question-id>",
+  "status": "uploaded",
+  "sourceAsset": { "contentType": "image/png", "size": 123456 },
+  "confirmedAt": "2026-08-06T02:01:00.000Z"
+}
+```
+
+The browser must never persist or expose `uploadUrl`, because it grants
+temporary write access to one object key. Student and tutor question responses
+exclude the private source-asset record; content managers may receive it for
+authoring operations.
+
+### Extract a confirmed image draft
+
+`POST /api/questions/:id/extractions` requires the `content_manager` role and
+ownership of the unpublished draft. The backend reads the private S3 object and
+sends it to the configured server-side OpenAI model. It returns editable
+question content, confidence, and review notes. Extraction is synchronous in
+this first increment.
+
+The result is untrusted draft data containing extracted question content plus
+an AI-proposed worked solution, final answer, and suggested mark allocation.
+These answer and marking fields are not an authoritative marking scheme. The
+content manager must review and correct every field before the draft becomes
+ready or is explicitly published.
 
 ## Submissions
 

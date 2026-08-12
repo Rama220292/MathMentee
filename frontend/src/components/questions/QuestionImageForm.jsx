@@ -5,7 +5,9 @@ import toast from "react-hot-toast";
 import { z } from "zod";
 
 import {
+  confirmQuestionImageUpload,
   createQuestionImageUploadRequest,
+  extractQuestionDraft,
   uploadQuestionImage
 } from "../../services/questionService";
 
@@ -51,13 +53,15 @@ export default function QuestionImageForm({ onBack, onValidated }) {
         size: selectedImage.size
       });
       const upload = await uploadQuestionImage(selectedImage, uploadRequest);
+      const draft = await confirmQuestionImageUpload(upload.uploadId);
+      const extraction = await extractQuestionDraft(draft.draftId);
 
       setUploadResult({
         type: "success",
-        message: "Image uploaded successfully to secure S3 storage."
+        message: "Image verified and attached to a secure question draft."
       });
-      toast.success("Photo uploaded securely");
-      onValidated?.({ file: selectedImage, uploadRequest, upload });
+      toast.success("Photo uploaded and confirmed");
+      onValidated?.({ file: selectedImage, uploadRequest, upload, draft, extraction });
     } catch (error) {
       const message =
         error.response?.data?.err ||
@@ -137,8 +141,7 @@ export default function QuestionImageForm({ onBack, onValidated }) {
             <p className="font-medium">{uploadResult.message}</p>
             {uploadResult.type === "success" && (
               <p className="mt-1">
-                The database draft has not been created yet; that is the next
-                confirmation step.
+                The private source image is ready for the extraction step.
               </p>
             )}
           </div>
@@ -170,7 +173,7 @@ export default function QuestionImageForm({ onBack, onValidated }) {
             disabled={isSubmitting || !(image instanceof File)}
             className="w-full py-3 rounded-lg text-white font-medium bg-gradient-to-r from-purple-500 to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "Checking photo..." : "Continue"}
+            {isSubmitting ? "Uploading and confirming..." : "Continue"}
           </button>
         </div>
       </form>

@@ -18,14 +18,30 @@
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `title` / `question_text` | string | Required |
+| `title` / `question_text` | string | Required once the draft reaches `ready` or `published` |
 | `topic` | enum | Currently `Algebra` or `Geometry` |
 | `level` | enum | Currently `Sec1`–`Sec4` |
 | `model_answer.final_answer` | string | Required |
 | `model_answer.steps` | array | Each step has `content` and `marks` |
 | `final_answer_marks` / `total_marks` | number | Total is calculated from the marking scheme |
 | `created_by` | User reference | Content-manager author; retained for audit even though questions belong to the shared bank |
+| `authoring_status` | enum | `uploaded`, `extracting`, `extracted`, `ready`, `published`, or `error` |
+| `source_asset` | object | Private S3 key and verified metadata; excluded from queries unless explicitly selected for content managers |
+| `extraction` | object | Provider/model, processing status, confidence, review notes, safe error state, and completion time |
 | `isPublished` | boolean | Controls student visibility |
+| timestamps | dates | `createdAt`, `updatedAt` |
+
+### QuestionImageUpload
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `created_by` | User reference | Owner used to authorise confirmation |
+| `object_key` | string | Unique private S3 key; never supplied by the browser during confirmation |
+| `content_type` / `size` | string / number | Expected metadata captured before issuing the presigned URL |
+| `expires_at` | date | Confirmation deadline matching the short-lived upload request |
+| `status` | enum | `pending` or `confirmed` |
+| `confirmed_at` | date | Successful S3 verification time |
+| `question` | Question reference | Draft created from the confirmed object |
 | timestamps | dates | `createdAt`, `updatedAt` |
 
 ### Submission
@@ -67,6 +83,7 @@ Overall and topic-specific scores should initially be derived from submissions r
 
 ```text
 User (content manager) 1 ─── * Question
+User (content manager) 1 ─── * QuestionImageUpload ─── 0..1 Question
 User (student) 1 ─── * Submission * ─── 1 Question
 User (tutor) 1 ─── * Submission (reviewed_by)
 ```
@@ -74,6 +91,8 @@ User (tutor) 1 ─── * Submission (reviewed_by)
 ## Lifecycle rules
 
 - A question's `total_marks` is derived from its model-step marks and final-answer marks.
+- An image-authored question starts unpublished in `uploaded` state only after S3 metadata matches its owner-scoped pending upload record.
+- Private `source_asset` fields are excluded from ordinary question queries and explicitly selected only for content-manager authoring responses.
 - Students see only published questions in question listings.
 - A submission begins as `pending`, becomes `ai_graded` after automated processing, and becomes `reviewed` after teacher review.
 - A student cannot update a submission once it is reviewed.

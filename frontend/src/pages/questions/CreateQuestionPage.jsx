@@ -15,6 +15,18 @@ export default function CreateQuestionPage() {
     );
   }
 
+  if (validatedImage) {
+    const extracted = validatedImage.extraction.extractedContent;
+    return (
+      <div className="bg-gray-100 min-h-screen">
+        <QuestionsForm
+          initialData={{ _id: validatedImage.draft.draftId, ...extracted }}
+          onCancel={() => setValidatedImage(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center relative p-4">
       <div
@@ -67,7 +79,7 @@ export default function CreateQuestionPage() {
                 Take or select a picture
               </span>
               <span className="block text-sm text-gray-600 mt-2">
-                Start from a photo, then review the extracted    content.
+                Start from a photo, then review the extracted content.
               </span>
             </button>
           </div>
@@ -76,7 +88,7 @@ export default function CreateQuestionPage() {
 
       {validatedImage && (
         <p className="sr-only" aria-live="polite">
-          Question photo uploaded securely and ready for confirmation.
+          Question photo confirmed and attached to draft {validatedImage.draft.draftId}.
         </p>
       )}
     </div>
