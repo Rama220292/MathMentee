@@ -78,7 +78,7 @@ As a tutor, I want to use questions from the tuition centre's shared question ba
 
 - I can browse all published questions in the shared bank.
 - I can view the question and approved model-answer/marking information needed to review a student's work.
-- I cannot edit, publish, unpublish, or delete question-bank content.
+- I cannot edit, publish, unpublish, archive, or restore question-bank content.
 
 ### T2 — Review student work
 

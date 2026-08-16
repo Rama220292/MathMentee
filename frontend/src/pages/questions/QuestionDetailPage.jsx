@@ -2,17 +2,23 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-import { getQuestionById, deleteQuestion } from "../../services/questionService";
+import {
+  getQuestionById,
+  setQuestionArchive,
+  setQuestionPublication
+} from "../../services/questionService";
 import EditQuestion from "../../components/questions/EditQuestion";
 import ConfirmButton from "../../components/common/ConfirmButton";
 
 export default function QuestionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const [question, setQuestion] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [publicationTarget, setPublicationTarget] = useState(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
 
   useEffect(() => {
@@ -39,21 +45,44 @@ export default function QuestionDetailPage() {
     return new Date(date).toLocaleString();
   };
 
+  const handlePublicationChange = async () => {
+    const nextPublished = publicationTarget;
+
+    try {
+      const result = await setQuestionPublication(id, nextPublished);
+      toast.success(result.message);
+      setRefreshVersion((version) => version + 1);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.err ||
+        `Could not ${nextPublished ? "publish" : "unpublish"} question`
+      );
+    } finally {
+      setPublicationTarget(null);
+    }
+  };
+
   // Check if edited
   const isEdited =
     question?.updatedAt &&
     question.updatedAt !== question.createdAt;
 
-  //  Delete handler
-  const handleDelete = async () => {
+  const isArchived = Boolean(question?.archived_at);
+
+  const handleArchiveChange = async () => {
+    const nextArchived = !isArchived;
+
     try {
-      await deleteQuestion(id);
-      toast.success("Deleted");
+      const result = await setQuestionArchive(id, nextArchived);
+      toast.success(result.message);
       navigate("/questions");
-    } catch {
-      toast.error("Delete failed");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.err ||
+        `Could not ${nextArchived ? "archive" : "restore"} question`
+      );
     } finally {
-      setConfirmOpen(false);
+      setArchiveOpen(false);
     }
   };
 
@@ -83,9 +112,30 @@ export default function QuestionDetailPage() {
         </button>
 
         {/* Title */}
-        <h1 className="text-2xl font-semibold mb-2">
-          {question.title}
-        </h1>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-semibold">
+            {question.title}
+          </h1>
+          {user?.role === "content_manager" && (
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+              isArchived
+                ? "bg-gray-200 text-gray-700"
+                : question.isPublished
+                ? "bg-green-100 text-green-700"
+                : "bg-amber-100 text-amber-700"
+            }`}
+          >
+              {isArchived
+                ? "Archived"
+                : question.has_unpublished_changes
+                  ? "Published · changes pending"
+                  : question.isPublished
+                    ? "Published"
+                    : "Unpublished"}
+            </span>
+          )}
+        </div>
 
         {/* Question */}
         <p className="mb-3 text-gray-700">
@@ -128,23 +178,59 @@ export default function QuestionDetailPage() {
         </div>
 
         {/*  Actions */}
-        <div className="flex justify-end gap-2 mt-6">
+        {user?.role === "content_manager" && (
+          <div className="flex justify-end gap-2 mt-6">
+            {!isArchived && (
+              <>
+                <button
+                  onClick={() => setEditOpen(true)}
+                  className="px-4 py-2 bg-indigo-500 text-white rounded"
+                >
+                  Edit
+                </button>
 
-          <button
-            onClick={() => setEditOpen(true)}
-            className="px-4 py-2 bg-indigo-500 text-white rounded"
-          >
-            Edit
-          </button>
+                {question.has_unpublished_changes ? (
+                  <>
+                    <button
+                      onClick={() => setPublicationTarget(true)}
+                      className="px-4 py-2 text-white rounded bg-green-500 hover:bg-green-600"
+                    >
+                      Publish changes
+                    </button>
+                    <button
+                      onClick={() => setPublicationTarget(false)}
+                      className="px-4 py-2 text-white rounded bg-amber-500 hover:bg-amber-600"
+                    >
+                      Unpublish
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setPublicationTarget(!question.isPublished)}
+                    className={`px-4 py-2 text-white rounded ${
+                      question.isPublished
+                        ? "bg-amber-500 hover:bg-amber-600"
+                        : "bg-green-500 hover:bg-green-600"
+                    }`}
+                  >
+                    {question.isPublished ? "Unpublish" : "Publish"}
+                  </button>
+                )}
+              </>
+            )}
 
-          <button
-            onClick={() => setConfirmOpen(true)}
-            className="px-4 py-2 bg-red-500 text-white rounded"
-          >
-            Delete
-          </button>
-
-        </div>
+            <button
+              onClick={() => setArchiveOpen(true)}
+              className={`px-4 py-2 text-white rounded ${
+                isArchived
+                  ? "bg-green-500 hover:bg-green-600"
+                  : "bg-red-500 hover:bg-red-600"
+              }`}
+            >
+              {isArchived ? "Restore" : "Archive"}
+            </button>
+          </div>
+        )}
 
       </div>
 
@@ -157,12 +243,37 @@ export default function QuestionDetailPage() {
         />
       )}
 
-      {/* Confirm Delete */}
-      {confirmOpen && (
+      {archiveOpen && (
         <ConfirmButton
-          message="Are you sure you want to delete this question?"
-          onConfirm={handleDelete}
-          onCancel={() => setConfirmOpen(false)}
+          message={
+            isArchived
+              ? "Restore this question to the active question bank? It will return to its previous draft state and remain unpublished."
+              : "Archive this question? It will be removed from the active question bank, but its content, versions, and submission history will be preserved."
+          }
+          confirmText={isArchived ? "Restore" : "Archive"}
+          confirmType={isArchived ? "primary" : "danger"}
+          onConfirm={handleArchiveChange}
+          onCancel={() => setArchiveOpen(false)}
+        />
+      )}
+
+      {publicationTarget !== null && (
+        <ConfirmButton
+          message={
+            publicationTarget && question.has_unpublished_changes
+              ? "Publish the latest saved version? New attempts will use it, while previous submissions remain tied to the version they originally used."
+              : !publicationTarget
+              ? "Unpublish this question? Students and tutors will no longer be able to access it."
+              : "Publish this question? Students and tutors will be able to discover and practise it."
+          }
+          confirmText={publicationTarget && question.has_unpublished_changes
+            ? "Publish changes"
+            : publicationTarget ? "Publish" : "Unpublish"}
+          confirmType={
+            publicationTarget ? "primary" : "danger"
+          }
+          onConfirm={handlePublicationChange}
+          onCancel={() => setPublicationTarget(null)}
         />
       )}
 

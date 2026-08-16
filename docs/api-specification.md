@@ -40,16 +40,22 @@ Base path: `/api`. All request and response bodies are JSON. Protected endpoints
 
 | Method | Path | Role | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/questions` | Content manager (planned; teacher currently) | Create a question |
+| `POST` | `/questions` | Content manager | Create a ready, unpublished question |
 | `GET` | `/questions` | Any signed-in user | List questions; supports `topic` and `level` query parameters |
 | `GET` | `/questions/:id` | Any signed-in user | Fetch a question |
-| `PUT` | `/questions/:id` | Content manager (planned; teacher currently) | Update a question |
-| `DELETE` | `/questions/:id` | Content manager (planned; teacher currently) | Delete a question |
+| `PUT` | `/questions/:id` | Content manager | Update question content without changing publication state |
+| `PATCH` | `/questions/:id/publication` | Content manager | Explicitly publish or unpublish a reviewed question |
+| `PATCH` | `/questions/:id/archive` | Content manager | Archive or restore a question without deleting its history |
 | `POST` | `/questions/image-upload-requests` | Content manager | Validate image metadata and create a short-lived private S3 upload URL |
 | `POST` | `/questions/image-upload-confirmations` | Content manager | Verify the uploaded S3 object and create an unpublished question draft |
 | `GET` | `/questions/meta/options` | Any signed-in user | Available topic and level values |
 
-Under the planned tuition-centre model, `GET /questions` and student access to `GET /questions/:id` must return a student-safe representation that excludes model answers, mark allocations, authoring metadata, extraction data, and original source assets. Tutors receive the approved marking information needed for review; content managers receive the full authoring representation.
+Only content managers receive unpublished questions from `GET /questions` or
+`GET /questions/:id`. Students and tutors receive published questions only.
+Student responses must exclude model answers, mark allocations, authoring
+metadata, extraction data, and original source assets. Tutors receive the
+approved marking information needed for review; content managers receive the
+full authoring representation.
 
 Question request shape:
 
@@ -63,10 +69,34 @@ Question request shape:
     "final_answer": "x = 4",
     "steps": [{ "content": "2x = 8", "marks": 1 }, { "content": "x = 4", "marks": 1 }]
   },
-  "final_answer_marks": 1,
-  "isPublished": true
+  "final_answer_marks": 1
 }
 ```
+
+Creation and content updates never publish implicitly. After reviewing a ready
+question, the content manager changes visibility explicitly:
+
+```json
+{ "isPublished": true }
+```
+
+Publishing changes `authoring_status` from `ready` to `published`; unpublishing
+changes it back to `ready`. Drafts still in upload, extraction, or error states
+cannot be published.
+
+Saving complete question content creates an immutable `QuestionVersion`.
+Editing a published question creates a new current version without changing the
+version served to students. Publishing again promotes the current version for
+future attempts. Each submission stores both the published version identifier
+and an immutable question snapshot, so later edits cannot alter its grading or
+review context.
+
+Archiving uses `{ "archived": true }`; restoring uses
+`{ "archived": false }`. Archiving unpublishes the question and removes it from
+active lists while retaining the question, all versions, its private source
+asset, and submission references. Restored questions return to their previous
+draft state and remain unpublished; previously published questions return as
+ready.
 
 Question-image upload request:
 

@@ -76,10 +76,7 @@ export default function QuestionImageForm({ onBack, onValidated }) {
   return (
     <section className="relative z-10 bg-white p-6 md:p-10 rounded-2xl shadow-lg w-full max-w-2xl">
       <div className="text-center mb-6">
-        <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
-          Step 1 of 4
-        </p>
-        <h1 className="text-3xl font-semibold text-gray-800 mt-1">
+        <h1 className="text-3xl font-semibold text-gray-800">
           Add a question photo
         </h1>
         <p className="text-gray-600 mt-2">

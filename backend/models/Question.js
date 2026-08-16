@@ -94,7 +94,7 @@ const questionSchema = new mongoose.Schema({
 
   authoring_status: {
     type: String,
-    enum: ["uploaded", "extracting", "extracted", "ready", "published", "error"],
+    enum: ["uploaded", "extracting", "extracted", "ready", "published", "error", "archived"],
     default: "ready",
     required: true
   },
@@ -108,7 +108,38 @@ const questionSchema = new mongoose.Schema({
 
   isPublished: {
     type: Boolean,
-    default: true
+    default: false
+  },
+
+  current_version: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "QuestionVersion"
+  },
+
+  published_version: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "QuestionVersion"
+  },
+
+  version_count: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+
+  archived_at: {
+    type: Date,
+    default: null
+  },
+
+  archived_by: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
+
+  status_before_archive: {
+    type: String,
+    enum: ["uploaded", "extracting", "extracted", "ready", "published", "error"]
   }
 
 }, { timestamps: true });

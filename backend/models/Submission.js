@@ -6,6 +6,23 @@ const marksBreakdownSchema = new mongoose.Schema({
   feedback: String
 });
 
+const questionSnapshotSchema = new mongoose.Schema({
+  version_number: { type: Number, required: true },
+  title: { type: String, required: true },
+  question_text: { type: String, required: true },
+  topic: { type: String, required: true },
+  level: { type: String, required: true },
+  model_answer: {
+    final_answer: { type: String, required: true },
+    steps: [{
+      content: { type: String, required: true },
+      marks: { type: Number, required: true }
+    }]
+  },
+  final_answer_marks: { type: Number, required: true },
+  total_marks: { type: Number, required: true }
+}, { _id: false });
+
 const submissionSchema = new mongoose.Schema({
 
   studentId: {
@@ -18,6 +35,15 @@ const submissionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Question", 
     required: true
+  },
+
+  questionVersionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "QuestionVersion"
+  },
+
+  question_snapshot: {
+    type: questionSnapshotSchema
   },
 
   raw_input: {

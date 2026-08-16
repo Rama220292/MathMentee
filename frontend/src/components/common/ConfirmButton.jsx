@@ -1,109 +1,66 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  FileText,
-  ClipboardList,
-  Settings,
-  MessageSquare,
-  LogOut
-} from "lucide-react";
+import { useState } from "react";
 
-export default function Navbar() {
-  const navigate = useNavigate();
+export default function ConfirmButton({
+  message,
+  onConfirm,
+  onCancel,
+  confirmText = "Confirm",
+  confirmType = "primary",
+  className = ""
+}) {
+  const [isConfirming, setIsConfirming] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const role = user?.role;
+  const handleConfirm = async () => {
+    setIsConfirming(true);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
+    try {
+      await onConfirm();
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
-  // 🔥 Rounded button style
-  const navBtn = ({ isActive }) =>
-    `flex items-center gap-2 px-4 py-2 text-sm font-medium 
-     rounded-xl transition shadow-sm
-     ${
-       isActive
-         ? "bg-indigo-600 text-white"
-         : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
-     }`;
-
   return (
-    <div className="w-full bg-white shadow-md px-6 py-3 flex justify-between items-center">
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-action-title"
+      aria-describedby="confirm-action-message"
+    >
+      <div className={`w-full max-w-sm rounded-xl bg-white p-6 shadow-lg ${className}`}>
+        <h2 id="confirm-action-title" className="mb-2 text-lg font-semibold">
+          Confirm action
+        </h2>
 
-      {/* 🔷 Logo + App Name (rounded container) */}
-      <div
-        onClick={() => navigate("/")}
-        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-100 cursor-pointer hover:bg-indigo-200 transition"
-      >
-        <img src="/images/MMIcon.png" className="w-7 h-7 object-contain" />
-        <span className="text-sm font-semibold text-indigo-700">
-          MathMentor
-        </span>
+        <p id="confirm-action-message" className="mb-4 text-gray-600">
+          {message}
+        </p>
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isConfirming}
+            className="rounded bg-gray-200 px-4 py-2 hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={isConfirming}
+            className={`rounded px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60 ${
+              confirmType === "danger"
+                ? "bg-red-500 hover:bg-red-600"
+                : "bg-indigo-500 hover:bg-indigo-600"
+            }`}
+          >
+            {isConfirming ? "Please wait..." : confirmText}
+          </button>
+        </div>
       </div>
-
-      {/* 🔷 Navigation */}
-      <div className="flex gap-3">
-
-        <NavLink to="/questions" className={navBtn}>
-          <FileText size={16} />
-          Questions
-        </NavLink>
-
-        {/* 🎓 Student */}
-        {role === "student" && (
-          <>
-            <NavLink to="/dashboard" className={navBtn}>
-              <LayoutDashboard size={16} />
-              Dashboard
-            </NavLink>
-
-            <NavLink to="/submissions" className={navBtn}>
-              <ClipboardList size={16} />
-              Submissions
-            </NavLink>
-          </>
-        )}
-
-        {/* 👨‍🏫 Teacher */}
-        {role === "teacher" && (
-          <>
-            <NavLink to="/teacher/dashboard" className={navBtn}>
-              <LayoutDashboard size={16} />
-              Students
-            </NavLink>
-
-            <NavLink to="/teacher/submissions" className={navBtn}>
-              <ClipboardList size={16} />
-              Review
-            </NavLink>
-          </>
-        )}
-
-        <NavLink to="/feedback" className={navBtn}>
-          <MessageSquare size={16} />
-          Feedback
-        </NavLink>
-
-        <NavLink to="/settings" className={navBtn}>
-          <Settings size={16} />
-          Settings
-        </NavLink>
-
-      </div>
-
-      {/* 🔴 Logout (rounded + distinct color) */}
-      <button
-        onClick={handleLogout}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl 
-                   bg-red-100 text-red-600 hover:bg-red-200 transition shadow-sm"
-      >
-        <LogOut size={16} />
-        Logout
-      </button>
-
     </div>
   );
 }

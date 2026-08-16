@@ -60,7 +60,7 @@ Student and tutor dashboards will show overall and topic-specific performance us
 
 - Which score is included: current `final_score`, tutor-reviewed score only, or a separately labelled preliminary score.
 - How attempts are counted and whether repeated attempts are weighted equally.
-- Whether unpublished/deleted questions and unreviewed submissions are included.
+- Whether unpublished or archived questions and unreviewed submissions are included.
 - The time period represented by a summary.
 
 Until these rules are agreed, the product must not present a percentage or average as an unqualified measure of mastery.

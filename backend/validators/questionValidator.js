@@ -24,9 +24,7 @@ const createQuestionSchema = Joi.object({
     steps: Joi.array().items(stepSchema).required()
   }).required(),
 
-  final_answer_marks: Joi.number().min(0).required(),
-
-  isPublished: Joi.boolean().optional()
+  final_answer_marks: Joi.number().min(0).required()
 });
 
 const updateQuestionSchema = createQuestionSchema.fork(
@@ -44,9 +42,19 @@ const questionImageUploadConfirmationSchema = Joi.object({
   uploadId: Joi.string().hex().length(24).required()
 });
 
+const questionPublicationSchema = Joi.object({
+  isPublished: Joi.boolean().required()
+});
+
+const questionArchiveSchema = Joi.object({
+  archived: Joi.boolean().required()
+});
+
 module.exports = {
   createQuestionSchema,
   updateQuestionSchema,
+  questionPublicationSchema,
+  questionArchiveSchema,
   questionImageUploadConfirmationSchema,
   questionImageUploadRequestSchema
 };

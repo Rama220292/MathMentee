@@ -1,7 +1,7 @@
 import api from "./api";
 
-export const getQuestions = async () => {
-  const res = await api.get("/questions");
+export const getQuestions = async ({ archived = false } = {}) => {
+  const res = await api.get("/questions", { params: { archived } });
   return res.data;
 };
 
@@ -21,8 +21,13 @@ export const updateQuestion = async (id, data) => {
   return res.data;
 };
 
-export const deleteQuestion = async (id) => {
-  const res = await api.delete(`/questions/${id}`);
+export const setQuestionPublication = async (id, isPublished) => {
+  const res = await api.patch(`/questions/${id}/publication`, { isPublished });
+  return res.data;
+};
+
+export const setQuestionArchive = async (id, archived) => {
+  const res = await api.patch(`/questions/${id}/archive`, { archived });
   return res.data;
 };
 

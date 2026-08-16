@@ -1,11 +1,43 @@
 const mongoose = require("mongoose")
 const Question = require("../models/Question");
+const QuestionVersion = require("../models/QuestionVersion");
 const QuestionImageUpload = require("../models/QuestionImageUpload");
 const {
   createQuestionImageUpload,
   verifyQuestionImageUpload
 } = require("../services/questionImageStorageService");
 const { extractQuestionImage } = require("../services/questionExtractionService");
+const {
+  createQuestionVersion,
+  versionContent
+} = require("../services/questionVersionService");
+
+const idsMatch = (left, right) =>
+  left && right && left.toString() === right.toString();
+
+const questionResponse = async (question, role) => {
+  const data = typeof question.toObject === "function"
+    ? question.toObject()
+    : { ...question };
+
+  if (role === "content_manager") {
+    return {
+      ...data,
+      has_unpublished_changes: Boolean(
+        data.isPublished &&
+        data.current_version &&
+        !idsMatch(data.current_version, data.published_version)
+      )
+    };
+  }
+
+  if (data.published_version) {
+    const version = await QuestionVersion.findById(data.published_version);
+    if (version) Object.assign(data, versionContent(version));
+  }
+
+  return data;
+};
 
 const calculateTotalMarks = (model_answer, final_answer_marks) => {
   const stepMarks = model_answer.steps.reduce(
@@ -21,10 +53,13 @@ const createQuestion = async (req, res) => {
     const question = await Question.create({
       ...req.body,
       created_by: req.user.id, // from JWT
-      authoring_status: req.body.isPublished === false ? "ready" : "published"
+      isPublished: false,
+      authoring_status: "ready"
     });
 
-    res.status(201).json(question);
+    await createQuestionVersion(question, req.user.id);
+
+    res.status(201).json(await questionResponse(question, req.user.role));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -35,12 +70,15 @@ const createQuestion = async (req, res) => {
 // GET ALL QUESTIONS
 const getQuestions = async (req, res) => {
   try {
-    const { topic, level } = req.query;
+    const { topic, level, archived } = req.query;
 
-     let filter = {};
+    let filter = {};
 
-    if (req.user.role === "student") {
+    if (req.user.role !== "content_manager") {
       filter.isPublished = true;
+      filter.archived_at = null;
+    } else {
+      filter.archived_at = archived === "true" ? { $ne: null } : null;
     }
 
     if (topic) filter.topic = topic;
@@ -50,7 +88,9 @@ const getQuestions = async (req, res) => {
     if (req.user.role === "content_manager") query.select("+source_asset");
     const questions = await query;
 
-    res.json(questions);
+    res.json(await Promise.all(
+      questions.map((question) => questionResponse(question, req.user.role))
+    ));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -69,7 +109,14 @@ const getQuestionById = async (req, res) => {
       return res.status(404).json({ err: "Question not found" });
     }
 
-    res.json(question);
+    if (
+      req.user.role !== "content_manager" &&
+      (!question.isPublished || question.archived_at)
+    ) {
+      return res.status(404).json({ err: "Question not found" });
+    }
+
+    res.json(await questionResponse(question, req.user.role));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -84,6 +131,18 @@ const updateQuestion = async (req, res) => {
 
     if (!question) {
       return res.status(404).json({ err: "Question not found" });
+    }
+
+    if (question.archived_at) {
+      return res.status(409).json({ err: "Restore the question before editing it" });
+    }
+
+    // Lazily establish an immutable baseline for questions created before
+    // versioning was introduced, before applying their first new edit.
+    if (question.isPublished && !question.published_version) {
+      const publishedBaseline = await createQuestionVersion(question, req.user.id);
+      question.published_version = publishedBaseline._id;
+      await question.save();
     }
 
     if (req.body.title !== undefined) {
@@ -110,11 +169,6 @@ const updateQuestion = async (req, res) => {
       question.final_answer_marks = req.body.final_answer_marks;
     }
 
-    if (req.body.isPublished !== undefined) {
-      question.isPublished = req.body.isPublished;
-      question.authoring_status = req.body.isPublished ? "published" : "ready";
-    }
-
     if (
       !question.isPublished &&
       ["uploaded", "extracting", "extracted", "error"].includes(question.authoring_status)
@@ -133,23 +187,99 @@ const updateQuestion = async (req, res) => {
 
     await question.save();
 
-    res.json(question);
+    await createQuestionVersion(question, req.user.id);
+
+    res.json(await questionResponse(question, req.user.role));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
   }
 };
 
-// DELETE QUESTION (Teacher)
-const deleteQuestion = async (req, res) => {
+const setQuestionPublication = async (req, res) => {
   try {
-    const deletedQuestion = await Question.findByIdAndDelete(req.params.id);
+    const question = await Question.findById(req.params.id);
 
-    if (!deletedQuestion) {
+    if (!question) {
       return res.status(404).json({ err: "Question not found" });
     }
 
-    res.json({ message: "Question deleted successfully" });
+    if (question.archived_at) {
+      return res.status(409).json({ err: "Restore the question before publishing it" });
+    }
+
+    if (
+      req.body.isPublished &&
+      !["ready", "published"].includes(question.authoring_status)
+    ) {
+      return res.status(409).json({
+        err: "Review and save the complete question before publishing"
+      });
+    }
+
+    if (req.body.isPublished && !question.current_version) {
+      await createQuestionVersion(question, req.user.id);
+    }
+
+    question.isPublished = req.body.isPublished;
+    question.authoring_status = req.body.isPublished ? "published" : "ready";
+    if (req.body.isPublished) {
+      question.published_version = question.current_version;
+    }
+    await question.save();
+
+    res.json({
+      id: question._id,
+      isPublished: question.isPublished,
+      authoring_status: question.authoring_status,
+      current_version: question.current_version,
+      published_version: question.published_version,
+      message: question.isPublished
+        ? "Question published successfully"
+        : "Question unpublished successfully"
+    });
+  } catch (err) {
+    const status = err.name === "ValidationError" ? 400 : 500;
+    res.status(status).json({ err: err.message });
+  }
+};
+
+const setQuestionArchive = async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id);
+
+    if (!question) {
+      return res.status(404).json({ err: "Question not found" });
+    }
+
+    if (req.body.archived) {
+      if (!question.archived_at) {
+        question.status_before_archive = question.authoring_status;
+      }
+      question.isPublished = false;
+      question.authoring_status = "archived";
+      question.archived_at = new Date();
+      question.archived_by = req.user.id;
+    } else {
+      question.isPublished = false;
+      question.authoring_status = question.status_before_archive === "published"
+        ? "ready"
+        : question.status_before_archive || "ready";
+      question.archived_at = null;
+      question.archived_by = undefined;
+      question.status_before_archive = undefined;
+    }
+
+    await question.save();
+
+    res.json({
+      id: question._id,
+      archived: Boolean(question.archived_at),
+      authoring_status: question.authoring_status,
+      message: question.archived_at
+        ? "Question archived successfully"
+        : "Question restored successfully"
+    });
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -340,7 +470,8 @@ module.exports = {
   getQuestions,
   getQuestionById,
   updateQuestion,
-  deleteQuestion,
+  setQuestionPublication,
+  setQuestionArchive,
   getQuestionMeta,
   createQuestionImageUploadRequest,
   confirmQuestionImageUpload,

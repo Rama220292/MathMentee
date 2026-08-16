@@ -10,6 +10,7 @@ export default function QuestionsPage() {
   const [search, setSearch] = useState("");
   const [topicFilter, setTopicFilter] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const navigate = useNavigate()
   const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -17,7 +18,7 @@ export default function QuestionsPage() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const data = await getQuestions();
+        const data = await getQuestions({ archived: showArchived });
         setQuestions(data);
       } catch {
         toast.error("Failed to load questions");
@@ -25,7 +26,7 @@ export default function QuestionsPage() {
     };
 
     fetchQuestions();
-  }, [refreshVersion]);
+  }, [refreshVersion, showArchived]);
 
   const filteredQuestions = useMemo(() => {
     let result = questions;
@@ -93,6 +94,33 @@ export default function QuestionsPage() {
           )}
         </div>
 
+        {user?.role === "content_manager" && (
+          <div className="mb-4 flex gap-2" role="group" aria-label="Question status">
+            <button
+              type="button"
+              onClick={() => setShowArchived(false)}
+              className={`rounded-lg px-4 py-2 font-medium ${
+                !showArchived
+                  ? "bg-white text-indigo-700"
+                  : "bg-white/20 text-white hover:bg-white/30"
+              }`}
+            >
+              Active questions
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowArchived(true)}
+              className={`rounded-lg px-4 py-2 font-medium ${
+                showArchived
+                  ? "bg-white text-indigo-700"
+                  : "bg-white/20 text-white hover:bg-white/30"
+              }`}
+            >
+              Archived questions
+            </button>
+          </div>
+        )}
+
         {/* ✅ 🔥 FILTERS GO HERE */}
           <QuestionFilters
             search={search}
@@ -106,6 +134,11 @@ export default function QuestionsPage() {
           />
 
         <div className="space-y-4">
+        {filteredQuestions.length === 0 && (
+          <div className="rounded-xl bg-white p-6 text-center text-gray-600 shadow-md">
+            {showArchived ? "No archived questions." : "No active questions found."}
+          </div>
+        )}
         {filteredQuestions.map((q) => (
           <QuestionCard
             key={q._id}

@@ -1,9 +1,30 @@
 const Submission = require("../models/Submission");
 const Question = require("../models/Question");
+const QuestionVersion = require("../models/QuestionVersion");
 const gradeAnswer = require("../services/gradingService");
 const gradeWithAI = require("../services/aiService");
+const {
+  createQuestionVersion,
+  snapshotFromVersion
+} = require("../services/questionVersionService");
 const { createSubmissionSchema, updateSubmissionSchema, reviewSubmissionSchema } = require("../validators/submissionValidator");
 const mongoose = require("mongoose");
+
+const submissionResponse = (submission) => {
+  const data = typeof submission.toObject === "function"
+    ? submission.toObject()
+    : { ...submission };
+
+  if (data.question_snapshot) {
+    const logicalQuestionId = data.questionId?._id || data.questionId;
+    data.questionId = {
+      _id: logicalQuestionId,
+      ...data.question_snapshot
+    };
+  }
+
+  return data;
+};
 
 // CREATE SUBMISSION (Student)
 const createSubmission = async (req, res) => {
@@ -17,16 +38,51 @@ const createSubmission = async (req, res) => {
       return res.status(404).json({ err: "Question not found" });
     }
 
+    if (!question.isPublished || question.archived_at) {
+      return res.status(404).json({ err: "Question not found" });
+    }
+
+    let questionVersion = question.published_version
+      ? await QuestionVersion.findById(question.published_version)
+      : null;
+
+    // Backfill a baseline version on first use for questions that predate
+    // versioning, so every new submission receives a concrete version link.
+    if (!questionVersion) {
+      questionVersion = await createQuestionVersion(
+        question,
+        question.created_by
+      );
+      question.published_version = questionVersion._id;
+      await question.save();
+    }
+
+    const gradingQuestion = questionVersion || question;
+    const questionSnapshot = questionVersion
+      ? snapshotFromVersion(questionVersion)
+      : {
+          version_number: 0,
+          title: question.title,
+          question_text: question.question_text,
+          topic: question.topic,
+          level: question.level,
+          model_answer: question.model_answer,
+          final_answer_marks: question.final_answer_marks,
+          total_marks: question.total_marks
+        };
+
     // Grade using gradingService
-    const gradingResult = gradeAnswer(structured_answer, question);
+    const gradingResult = gradeAnswer(structured_answer, gradingQuestion);
 
     // Grade using aiService
-    const aiResult = await gradeWithAI(structured_answer, question);
+    const aiResult = await gradeWithAI(structured_answer, gradingQuestion);
 
     // Save submission
     const submission = await Submission.create({
       studentId: req.user.id,
       questionId,
+      questionVersionId: questionVersion?._id,
+      question_snapshot: questionSnapshot,
       raw_input,
       structured_answer,
 
@@ -46,7 +102,7 @@ const createSubmission = async (req, res) => {
       review_status: "ai_graded"
     });
 
-    res.status(201).json(submission);
+    res.status(201).json(submissionResponse(submission));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -74,7 +130,25 @@ const updateSubmission = async (req, res) => {
       });
     }
 
-    const question = await Question.findById(submission.questionId);
+    let question;
+
+    if (submission.questionVersionId) {
+      question = await QuestionVersion.findById(submission.questionVersionId);
+    }
+
+    if (!question && submission.question_snapshot) {
+      question = submission.question_snapshot;
+    }
+
+    if (!question) {
+      question = await Question.findById(submission.questionId);
+    }
+
+    if (!question) {
+      return res.status(409).json({
+        err: "The question version for this submission is unavailable"
+      });
+    }
 
     // Deterministic grading
     const gradingResult = gradeAnswer(req.body.structured_answer, question);
@@ -113,7 +187,7 @@ const updateSubmission = async (req, res) => {
 
     await submission.save();
 
-    res.json(submission);
+    res.json(submissionResponse(submission));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -142,7 +216,7 @@ const getSubmissionById = async (req, res) => {
 
     // Teachers can view all → no restriction
 
-    res.json(submission);
+    res.json(submissionResponse(submission));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -178,7 +252,7 @@ const reviewSubmission = async (req, res) => {
 
     await submission.save();
 
-    res.json(submission);
+    res.json(submissionResponse(submission));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -193,7 +267,7 @@ const getMySubmissions = async (req, res) => {
       .populate("questionId")
       .sort({ createdAt: -1 });
 
-    res.json(submissions);
+    res.json(submissions.map(submissionResponse));
   } catch (err) {
     console.error(err)
     res.status(500).json({ err: err.message });
@@ -209,7 +283,7 @@ const getAllSubmissions = async (req, res) => {
       .populate("studentId", "name email")
       .sort({ createdAt: -1 });
 
-    res.json(submissions);
+    res.json(submissions.map(submissionResponse));
 
   } catch (err) {
     console.error(err);
@@ -226,7 +300,7 @@ const getPendingSubmissions = async (req, res) => {
       .populate("studentId", "name email")
       .sort({ createdAt: -1 });
 
-    res.json(submissions);
+    res.json(submissions.map(submissionResponse));
 
   } catch (err) {
     res.status(500).json({ err: err.message });

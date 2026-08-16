@@ -28,7 +28,12 @@ const schema = z.object({
   steps: z.array(stepSchema).min(1, "At least one step is required")
 });
 
-export default function QuestionsForm({ initialData = null, onSuccess, onCancel }) {
+export default function QuestionsForm({
+  initialData = null,
+  onSuccess,
+  onCancel,
+  submitLabel
+}) {
   const navigate = useNavigate();
   const [topics, setTopics] = useState([]);
   const [levels, setLevels] = useState([]);
@@ -309,7 +314,7 @@ const onSubmit = async (data) => {
                     ? "Updating..."
                     : "Creating..."
                 : initialData
-                    ? "Edit Question"
+                    ? submitLabel || "Edit Question"
                     : "Create Question"}
             </button>
 

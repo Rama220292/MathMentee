@@ -1,11 +1,57 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import QuestionImageForm from "../../components/questions/QuestionImageForm";
 import QuestionsForm from "../../components/questions/QuestionsForm";
 
 export default function CreateQuestionPage() {
+  const navigate = useNavigate();
   const [inputMethod, setInputMethod] = useState(null);
   const [validatedImage, setValidatedImage] = useState(null);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+
+  const startAnotherQuestion = () => {
+    setShowSaveSuccess(false);
+    setValidatedImage(null);
+    setInputMethod(null);
+  };
+
+  const saveSuccessDialog = showSaveSuccess ? (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="question-save-success-title"
+    >
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-xl">
+        <h2
+          id="question-save-success-title"
+          className="text-2xl font-semibold text-gray-800"
+        >
+          Question saved successfully
+        </h2>
+        <p className="mt-3 text-gray-600">
+          Your question has been saved to the database successfully.
+        </p>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={startAnotherQuestion}
+            className="w-full rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 px-4 py-3 font-medium text-white"
+          >
+            Submit another question
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/questions")}
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Return to questions
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   if (inputMethod === "manual") {
     return (
@@ -22,7 +68,10 @@ export default function CreateQuestionPage() {
         <QuestionsForm
           initialData={{ _id: validatedImage.draft.draftId, ...extracted }}
           onCancel={() => setValidatedImage(null)}
+          onSuccess={() => setShowSaveSuccess(true)}
+          submitLabel="Submit Question"
         />
+        {saveSuccessDialog}
       </div>
     );
   }

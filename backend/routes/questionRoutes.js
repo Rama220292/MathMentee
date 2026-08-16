@@ -7,6 +7,8 @@ const validate = require("../middleware/validate");
 const {
   createQuestionSchema,
   updateQuestionSchema,
+  questionPublicationSchema,
+  questionArchiveSchema,
   questionImageUploadConfirmationSchema,
   questionImageUploadRequestSchema
 } = require("../validators/questionValidator");
@@ -15,7 +17,20 @@ const { objectIdSchema } = require("../validators/commonValidator");
 
 router.post("/", verifyToken, verifyRole("content_manager"), validate(createQuestionSchema), questionController.createQuestion);
 router.put("/:id", verifyToken, verifyRole("content_manager"), validate(updateQuestionSchema), questionController.updateQuestion);
-router.delete("/:id", verifyToken, verifyRole("content_manager"), questionController.deleteQuestion);
+router.patch(
+  "/:id/publication",
+  verifyToken,
+  verifyRole("content_manager"),
+  validate(questionPublicationSchema),
+  questionController.setQuestionPublication
+);
+router.patch(
+  "/:id/archive",
+  verifyToken,
+  verifyRole("content_manager"),
+  validate(questionArchiveSchema),
+  questionController.setQuestionArchive
+);
 router.get("/", verifyToken, questionController.getQuestions);
 router.get("/meta/options", verifyToken, questionController.getQuestionMeta);
 router.post(

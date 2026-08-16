@@ -25,11 +25,26 @@
 | `model_answer.steps` | array | Each step has `content` and `marks` |
 | `final_answer_marks` / `total_marks` | number | Total is calculated from the marking scheme |
 | `created_by` | User reference | Content-manager author; retained for audit even though questions belong to the shared bank |
-| `authoring_status` | enum | `uploaded`, `extracting`, `extracted`, `ready`, `published`, or `error` |
+| `authoring_status` | enum | `uploaded`, `extracting`, `extracted`, `ready`, `published`, `error`, or `archived` |
 | `source_asset` | object | Private S3 key and verified metadata; excluded from queries unless explicitly selected for content managers |
 | `extraction` | object | Provider/model, processing status, confidence, review notes, safe error state, and completion time |
-| `isPublished` | boolean | Controls student visibility |
+| `isPublished` | boolean | Defaults to `false`; controls student and tutor visibility |
+| `current_version` / `published_version` | QuestionVersion references | Latest saved version and immutable version used for new attempts |
+| `version_count` | number | Monotonic saved-version counter |
+| `archived_at` / `archived_by` / `status_before_archive` | date / User reference / enum | Reversible archive audit metadata and restoration state |
 | timestamps | dates | `createdAt`, `updatedAt` |
+
+### QuestionVersion
+
+Each explicit save of complete question content creates an immutable version.
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `question` | Question reference | Stable logical question identity |
+| `version_number` | number | Monotonic within the question; unique with `question` |
+| question and marking fields | snapshot | Immutable prompt, model answer, step marks, final marks, and total marks |
+| `created_by` | User reference | Content manager who saved the version |
+| timestamps | dates | Version creation audit data |
 
 ### QuestionImageUpload
 
@@ -50,6 +65,8 @@
 | --- | --- | --- |
 | `studentId` | User reference | Required |
 | `questionId` | Question reference | Required |
+| `questionVersionId` | QuestionVersion reference | Exact published version used for the attempt |
+| `question_snapshot` | object | Defensive immutable copy of the question and marking scheme used for the attempt |
 | `raw_input` | string | Original joined working input |
 | `structured_answer` | object | `final_answer` and array of `steps` |
 | `ai_score` / `ai_feedback` | number / string | AI output |
@@ -92,8 +109,14 @@ User (tutor) 1 ─── * Submission (reviewed_by)
 
 - A question's `total_marks` is derived from its model-step marks and final-answer marks.
 - An image-authored question starts unpublished in `uploaded` state only after S3 metadata matches its owner-scoped pending upload record.
+- A manually authored question also starts unpublished in `ready` state.
+- Only an explicitly reviewed `ready` question can be published; unpublishing returns it to `ready` without deleting it.
+- Editing creates a new immutable version; publishing promotes that version only for future attempts.
+- Submissions retain their original version reference and snapshot for grading and review.
+- Existing questions created before versioning receive a baseline version on their next edit, publication action, or new student attempt. Legacy submissions still lacking a version are pinned to that pre-edit baseline at the same time.
+- Archiving preserves the question, every version, private source assets, and submission history; restoring returns it to `ready` and unpublished.
 - Private `source_asset` fields are excluded from ordinary question queries and explicitly selected only for content-manager authoring responses.
-- Students see only published questions in question listings.
+- Students and tutors see only published questions in question listings and direct question lookups.
 - A submission begins as `pending`, becomes `ai_graded` after automated processing, and becomes `reviewed` after teacher review.
 - A student cannot update a submission once it is reviewed.
 
@@ -107,7 +130,6 @@ These should be added only when supported by agreed user stories:
 | Class / cohort | Tutor-to-student membership if all-tutor access is later narrowed |
 | Assignment | Distributing questions with due dates and release settings |
 | Attempt | Multiple named or versioned attempts per assignment/question |
-| Question version | Reproducible marking if a question changes after submission |
 | Rubric | Richer criteria beyond exact model-step matching |
 | Feedback event | Async feedback retries and audit history |
 | Input asset / extraction job | Private image/handwriting storage and asynchronous OCR/vision processing |
