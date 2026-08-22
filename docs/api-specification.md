@@ -57,6 +57,12 @@ metadata, extraction data, and original source assets. Tutors receive the
 approved marking information needed for review; content managers receive the
 full authoring representation.
 
+Student submission responses contain the published question prompt, the
+student's own answer, and the automated score and feedback. They exclude the
+question snapshot's model answer, marking allocation, and deterministic marking
+breakdown. A tutor-reviewed final score and feedback are included only after the
+submission reaches `reviewed` status.
+
 Question request shape:
 
 ```json

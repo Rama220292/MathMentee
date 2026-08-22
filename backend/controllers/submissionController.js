@@ -10,7 +10,7 @@ const {
 const { createSubmissionSchema, updateSubmissionSchema, reviewSubmissionSchema } = require("../validators/submissionValidator");
 const mongoose = require("mongoose");
 
-const submissionResponse = (submission) => {
+const submissionResponse = (submission, role) => {
   const data = typeof submission.toObject === "function"
     ? submission.toObject()
     : { ...submission };
@@ -21,6 +21,33 @@ const submissionResponse = (submission) => {
       _id: logicalQuestionId,
       ...data.question_snapshot
     };
+  }
+
+  if (role === "student") {
+    if (data.questionId) {
+      data.questionId = {
+        _id: data.questionId._id,
+        title: data.questionId.title,
+        question_text: data.questionId.question_text,
+        topic: data.questionId.topic,
+        level: data.questionId.level,
+        total_marks: data.questionId.total_marks
+      };
+    }
+
+    delete data.questionVersionId;
+    delete data.question_snapshot;
+    delete data.marks_breakdown;
+    delete data.final_answer_correct;
+    delete data.teacher_score;
+    delete data.teacher_feedback;
+    delete data.reviewed_by;
+
+    if (data.review_status !== "reviewed") {
+      delete data.final_score;
+      delete data.final_feedback;
+      delete data.reviewedAt;
+    }
   }
 
   return data;
@@ -102,7 +129,7 @@ const createSubmission = async (req, res) => {
       review_status: "ai_graded"
     });
 
-    res.status(201).json(submissionResponse(submission));
+    res.status(201).json(submissionResponse(submission, "student"));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -187,7 +214,7 @@ const updateSubmission = async (req, res) => {
 
     await submission.save();
 
-    res.json(submissionResponse(submission));
+    res.json(submissionResponse(submission, "student"));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -216,7 +243,7 @@ const getSubmissionById = async (req, res) => {
 
     // Teachers can view all → no restriction
 
-    res.json(submissionResponse(submission));
+    res.json(submissionResponse(submission, req.user.role));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -252,7 +279,7 @@ const reviewSubmission = async (req, res) => {
 
     await submission.save();
 
-    res.json(submissionResponse(submission));
+    res.json(submissionResponse(submission, req.user.role));
 
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -267,7 +294,7 @@ const getMySubmissions = async (req, res) => {
       .populate("questionId")
       .sort({ createdAt: -1 });
 
-    res.json(submissions.map(submissionResponse));
+    res.json(submissions.map((submission) => submissionResponse(submission, "student")));
   } catch (err) {
     console.error(err)
     res.status(500).json({ err: err.message });
@@ -283,7 +310,7 @@ const getAllSubmissions = async (req, res) => {
       .populate("studentId", "name email")
       .sort({ createdAt: -1 });
 
-    res.json(submissions.map(submissionResponse));
+    res.json(submissions.map((submission) => submissionResponse(submission, req.user.role)));
 
   } catch (err) {
     console.error(err);
@@ -300,7 +327,7 @@ const getPendingSubmissions = async (req, res) => {
       .populate("studentId", "name email")
       .sort({ createdAt: -1 });
 
-    res.json(submissions.map(submissionResponse));
+    res.json(submissions.map((submission) => submissionResponse(submission, req.user.role)));
 
   } catch (err) {
     res.status(500).json({ err: err.message });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import { getSubmissionById } from "../../services/submissionService";
 
 import SubmissionResult from "../../components/results/SubmissionResult";
@@ -8,16 +9,24 @@ import SubmissionResult from "../../components/results/SubmissionResult";
 export default function SubmissionResultPage() {
   const { id } = useParams();
   const [submission, setSubmission] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetch = async () => {
-      const data = await getSubmissionById(id);
-      setSubmission(data);
+      try {
+        const data = await getSubmissionById(id);
+        setSubmission(data);
+      } catch (requestError) {
+        const message = requestError.response?.data?.err || "Could not load submission";
+        setError(message);
+        toast.error(message);
+      }
     };
     fetch();
   }, [id]);
 
-  if (!submission) return <p>Loading...</p>;
+  if (error) return <p className="mt-10 text-center text-red-600">{error}</p>;
+  if (!submission) return <p className="mt-10 text-center">Loading...</p>;
 
   return (
     <div className="min-h-screen flex items-center justify-center relative">

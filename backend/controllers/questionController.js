@@ -15,6 +15,15 @@ const {
 const idsMatch = (left, right) =>
   left && right && left.toString() === right.toString();
 
+const studentQuestionResponse = (data) => ({
+  _id: data._id,
+  title: data.title,
+  question_text: data.question_text,
+  topic: data.topic,
+  level: data.level,
+  total_marks: data.total_marks
+});
+
 const questionResponse = async (question, role) => {
   const data = typeof question.toObject === "function"
     ? question.toObject()
@@ -35,6 +44,8 @@ const questionResponse = async (question, role) => {
     const version = await QuestionVersion.findById(data.published_version);
     if (version) Object.assign(data, versionContent(version));
   }
+
+  if (role === "student") return studentQuestionResponse(data);
 
   return data;
 };

@@ -200,6 +200,44 @@ test("non-content-managers list published questions only", async () => {
   assert.deepEqual(response.body, questions);
 });
 
+test("student question responses exclude answers and authoring metadata", async () => {
+  const question = {
+    _id: "507f191e810c19729de860eb",
+    title: "Linear equation",
+    question_text: "Solve 2x = 6.",
+    topic: "Algebra",
+    level: "Sec1",
+    total_marks: 2,
+    model_answer: {
+      final_answer: "x = 3",
+      steps: [{ content: "Divide by 2", marks: 1 }]
+    },
+    final_answer_marks: 1,
+    authoring_status: "published",
+    extraction: { provider: "openai" },
+    created_by: "507f1f77bcf86cd799439011",
+    isPublished: true
+  };
+  const query = {
+    then(resolve, reject) {
+      return Promise.resolve([question]).then(resolve, reject);
+    }
+  };
+  const { getQuestions } = loadController({ find: () => query });
+  const response = createResponse();
+
+  await getQuestions({ user: { role: "student" }, query: {} }, response);
+
+  assert.deepEqual(response.body, [{
+    _id: question._id,
+    title: question.title,
+    question_text: question.question_text,
+    topic: question.topic,
+    level: question.level,
+    total_marks: question.total_marks
+  }]);
+});
+
 test("non-content-managers cannot fetch an unpublished question by id", async () => {
   const question = {
     _id: "507f191e810c19729de860eb",

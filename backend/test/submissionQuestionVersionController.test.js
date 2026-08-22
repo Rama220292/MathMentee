@@ -122,3 +122,60 @@ test("rejects new submissions for archived questions", async () => {
   assert.equal(response.statusCode, 404);
   assert.deepEqual(response.body, { err: "Question not found" });
 });
+
+test("student submission responses expose AI feedback without marking secrets", async () => {
+  const studentId = "507f1f77bcf86cd799439011";
+  const submission = {
+    _id: "507f191e810c19729de860ed",
+    studentId: { _id: studentId, name: "Aisha" },
+    questionId: { _id: "507f191e810c19729de860eb" },
+    question_snapshot: {
+      version_number: 2,
+      title: "Linear equation",
+      question_text: "Solve 2x = 6.",
+      topic: "Algebra",
+      level: "Sec1",
+      model_answer: {
+        final_answer: "x = 3",
+        steps: [{ content: "Divide by 2", marks: 1 }]
+      },
+      final_answer_marks: 1,
+      total_marks: 2
+    },
+    questionVersionId: "507f191e810c19729de860ec",
+    structured_answer: { final_answer: "x = 3", steps: ["Divide by 2"] },
+    ai_score: 2,
+    ai_feedback: "Correct reasoning.",
+    marks_breakdown: [{ step_index: 0, marks_awarded: 1 }],
+    final_answer_correct: true,
+    final_score: 2,
+    final_feedback: "Correct",
+    review_status: "ai_graded"
+  };
+  const query = {
+    populate() { return this; },
+    then(resolve, reject) { return Promise.resolve(submission).then(resolve, reject); }
+  };
+
+  require.cache[submissionModelPath] = {
+    exports: { findById: () => query }
+  };
+  delete require.cache[controllerPath];
+  const { getSubmissionById } = require(controllerPath);
+  const response = createResponse();
+
+  await getSubmissionById({
+    params: { id: submission._id },
+    user: { id: studentId, role: "student" }
+  }, response);
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.ai_score, 2);
+  assert.equal(response.body.ai_feedback, "Correct reasoning.");
+  assert.equal(response.body.questionId.total_marks, 2);
+  assert.equal("model_answer" in response.body.questionId, false);
+  assert.equal("question_snapshot" in response.body, false);
+  assert.equal("questionVersionId" in response.body, false);
+  assert.equal("marks_breakdown" in response.body, false);
+  assert.equal("final_score" in response.body, false);
+});

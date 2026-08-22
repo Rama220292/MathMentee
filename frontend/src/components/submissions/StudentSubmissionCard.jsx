@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 export default function StudentSubmissionCard({ submission }) {
   const navigate = useNavigate();
 
-  const maxMarks =
-    submission.questionId.model_answer.steps.reduce(
-      (sum, step) => sum + step.marks,
-      0
-    ) + submission.questionId.final_answer_marks;
+  const maxMarks = submission.questionId.total_marks;
+  const displayedScore = submission.review_status === "reviewed"
+    ? submission.final_score
+    : submission.ai_score;
 
   return (
     <div className="bg-white p-4 rounded-lg shadow">
@@ -25,7 +24,8 @@ export default function StudentSubmissionCard({ submission }) {
       </p>
 
       <p className="text-sm font-medium mt-1">
-        Score: {submission.final_score} / {maxMarks}
+        {submission.review_status === "reviewed" ? "Final" : "AI"} score:{" "}
+        {displayedScore} / {maxMarks}
       </p>
 
       <div className="flex gap-2 mt-4">

@@ -29,19 +29,25 @@ export default function SubmissionResult({ submission }) {
 
       <StudentAnswerPanel answer={submission.structured_answer} />
 
-      <ModelAnswerPanel
-        model={submission.questionId.model_answer}
-        question={submission.questionId}
-      />
+      {submission.questionId.model_answer && (
+        <ModelAnswerPanel
+          model={submission.questionId.model_answer}
+          question={submission.questionId}
+        />
+      )}
 
       <AIScorePanel
         score={submission.ai_score}
         feedback={submission.ai_feedback}
+        maxScore={submission.questionId.total_marks}
+        awaitingReview={submission.review_status !== "reviewed"}
       />
 
       {submission.review_status === "reviewed" && (
         <>
-          <MarkingBreakdown breakdown={submission.marks_breakdown} />
+          {submission.marks_breakdown?.length > 0 && (
+            <MarkingBreakdown breakdown={submission.marks_breakdown} />
+          )}
 
           <FinalScoreSummary
             score={submission.final_score}
