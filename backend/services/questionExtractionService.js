@@ -55,7 +55,9 @@ const extractQuestionImage = async (
     model: process.env.OPENAI_EXTRACTION_MODEL || "gpt-5-mini",
     instructions: [
       "Extract only the visible Singapore secondary-school mathematics question.",
-      "Preserve mathematical notation in readable plain text or LaTeX.",
+      "Return ordinary wording as plain text and every mathematical expression as valid LaTeX.",
+      "Wrap inline mathematics in \\( and \\), and wrap a standalone displayed equation in \\[ and \\].",
+      "Use those delimiters consistently in question_text, model_answer.final_answer, and every model_answer step.",
       "Create a proposed worked solution for the visible question, including a concise final answer.",
       "Suggest positive whole-number marks for each working step and for the final answer.",
       "Treat the solution and marks as an untrusted draft for human review, not an official marking scheme.",

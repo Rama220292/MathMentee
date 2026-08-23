@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 
 import { getQuestionById } from "../../services/questionService";
 import SubmissionForm from "../../components/submissions/SubmissionForm";
+import MathText from "../../components/math/MathText";
 
 export default function SubmitPage() {
   const { questionId } = useParams();
@@ -46,7 +47,7 @@ export default function SubmitPage() {
           </h1>
 
           <p className="text-gray-700 mb-4">
-            {question.question_text}
+            <MathText>{question.question_text}</MathText>
           </p>
 
           <div className="text-sm text-gray-500 mb-6">

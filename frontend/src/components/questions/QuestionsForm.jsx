@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { Controller, useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import StepInputList from "./StepInputList";
+import MathContentEditor from "../math/MathContentEditor";
+import MathText from "../math/MathText";
 import { createQuestion, updateQuestion, getQuestionMeta } from "../../services/questionService";
 
 // ================= ZOD =================
@@ -67,6 +69,7 @@ export default function QuestionsForm({
 
   // ================= WATCH =================
   const watchedSteps = useWatch({ control, name: "steps" });
+  const watchedQuestionText = useWatch({ control, name: "question_text" });
   const watchedFinalMarks = useWatch({
     control,
     name: "final_answer_marks"
@@ -182,15 +185,19 @@ const onSubmit = async (data) => {
 
           {/* Question */}
           <div>
-            <label htmlFor="question-text" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Question text
             </label>
-            <textarea
-              id="question-text"
-              {...register("question_text")}
-              placeholder="Enter the complete question shown to students"
-              rows={8}
-              className="w-full border px-3 py-2 rounded-lg resize-y"
+            <Controller
+              name="question_text"
+              control={control}
+              render={({ field }) => (
+                <MathContentEditor
+                  value={field.value}
+                  onChange={field.onChange}
+                  label="Question"
+                />
+              )}
             />
             <p className="text-red-500 text-sm">
               {errors.question_text?.message}
@@ -230,15 +237,19 @@ const onSubmit = async (data) => {
 
           {/* Final Answer */}
           <div>
-            <label htmlFor="final-answer" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Final answer
             </label>
-            <textarea
-              id="final-answer"
-              {...register("final_answer")}
-              placeholder="Enter the answer students should reach"
-              rows={3}
-              className="w-full border px-3 py-2 rounded-lg resize-y"
+            <Controller
+              name="final_answer"
+              control={control}
+              render={({ field }) => (
+                <MathContentEditor
+                  value={field.value}
+                  onChange={field.onChange}
+                  label="Final answer"
+                />
+              )}
             />
             <p className="text-red-500 text-sm">
               {errors.final_answer?.message}
@@ -269,8 +280,16 @@ const onSubmit = async (data) => {
             append={append}
             remove={remove}
             register={register}
+            control={control}
             errors={errors}
           />
+
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+            <h3 className="font-semibold text-gray-800">Student preview</h3>
+            <div className="mt-2 rounded-lg bg-white p-4 text-gray-700">
+              <MathText>{watchedQuestionText || "Question preview will appear here."}</MathText>
+            </div>
+          </div>
 
           {/* Total Marks */}
           <div className="flex justify-between items-center px-4 py-3 rounded-lg border bg-gradient-to-r from-purple-50 to-indigo-50">

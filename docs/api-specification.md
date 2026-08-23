@@ -68,16 +68,22 @@ Question request shape:
 ```json
 {
   "title": "Solve a linear equation",
-  "question_text": "Solve 2x + 3 = 11.",
+  "question_text": "Solve \\(2x + 3 = 11\\).",
   "topic": "Algebra",
   "level": "Sec2",
   "model_answer": {
-    "final_answer": "x = 4",
-    "steps": [{ "content": "2x = 8", "marks": 1 }, { "content": "x = 4", "marks": 1 }]
+    "final_answer": "\\(x = 4\\)",
+    "steps": [{ "content": "\\(2x = 8\\)", "marks": 1 }, { "content": "\\(x = 4\\)", "marks": 1 }]
   },
   "final_answer_marks": 1
 }
 ```
+
+Question wording and proposed answer strings may contain embedded LaTeX. Inline
+expressions use `\\(...\\)` and standalone expressions use `\\[...\\]`. The
+authoring interface must present these expressions through a visual equation
+editor and preview; content managers are not expected to edit LaTeX source.
+Extracted mathematics remains untrusted draft content until reviewed.
 
 Creation and content updates never publish implicitly. After reviewing a ready
 question, the content manager changes visibility explicitly:

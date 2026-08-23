@@ -1,8 +1,12 @@
+import { Controller } from "react-hook-form";
+import MathContentEditor from "../math/MathContentEditor";
+
 export default function StepInputList({
   fields,
   append,
   remove,
   register,
+  control,
   errors
 }) {
   return (
@@ -25,13 +29,19 @@ export default function StepInputList({
         <div key={field.id} className="flex gap-2 items-center">
 
           {/* Step content */}
-          <textarea
-            aria-label={`Working for step ${index + 1}`}
-            {...register(`steps.${index}.content`)}
-            placeholder={`Step ${index + 1}`}
-            rows={2}
-            className="flex-1 border rounded-lg px-3 py-2 resize-y"
-          />
+          <div className="flex-1">
+            <Controller
+              name={`steps.${index}.content`}
+              control={control}
+              render={({ field: controlledField }) => (
+                <MathContentEditor
+                  value={controlledField.value}
+                  onChange={controlledField.onChange}
+                  label={`Working for step ${index + 1}`}
+                />
+              )}
+            />
+          </div>
 
           {/* Marks */}
           <input

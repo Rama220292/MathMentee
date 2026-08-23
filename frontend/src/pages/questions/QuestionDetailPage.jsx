@@ -9,6 +9,7 @@ import {
 } from "../../services/questionService";
 import EditQuestion from "../../components/questions/EditQuestion";
 import ConfirmButton from "../../components/common/ConfirmButton";
+import MathText from "../../components/math/MathText";
 
 export default function QuestionDetailPage() {
   const { id } = useParams();
@@ -139,7 +140,7 @@ export default function QuestionDetailPage() {
 
         {/* Question */}
         <p className="mb-3 text-gray-700">
-          {question.question_text}
+          <MathText>{question.question_text}</MathText>
         </p>
 
         {/* Topic + Level */}
@@ -150,7 +151,7 @@ export default function QuestionDetailPage() {
         {/* ✅ Final Answer INLINE */}
         <div className="mb-4">
           <span className="font-medium">Final Answer: </span>
-          {question.model_answer?.final_answer}
+          <MathText>{question.model_answer?.final_answer}</MathText>
           <span className="text-gray-500 ml-2">
             ({question.final_answer_marks} marks)
           </span>
@@ -162,7 +163,7 @@ export default function QuestionDetailPage() {
         <ul className="space-y-2">
           {question.model_answer.steps.map((step, i) => (
             <li key={i} className="flex justify-between">
-              <span>{step.content}</span>
+              <span><MathText>{step.content}</MathText></span>
               <span className="text-gray-500">{step.marks} marks</span>
             </li>
           ))}

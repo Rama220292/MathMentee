@@ -7,6 +7,7 @@ import {
   setQuestionPublication
 } from "../../services/questionService";
 import ConfirmButton from "../common/ConfirmButton";
+import MathText from "../math/MathText";
 
 export default function QuestionCard({ question, refresh }) {
   const [open, setOpen] = useState(false);
@@ -78,7 +79,7 @@ export default function QuestionCard({ question, refresh }) {
       </div>
 
       <p className="text-gray-600 mt-1">
-        {question.question_text}
+        <MathText>{question.question_text}</MathText>
       </p>
 
       <div className="flex justify-between items-center mt-4">
