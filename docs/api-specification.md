@@ -210,7 +210,26 @@ Create-submission request:
 Review request:
 
 ```json
-{ "tutor_score": 3, "tutor_feedback": "Correct method. State the final answer clearly." }
+{
+  "tutor_score": 3,
+  "tutor_marks_breakdown": [
+    {
+      "criterion": "Step 1",
+      "marks_awarded": 1,
+      "marks_available": 1,
+      "evidence": "2x = 6",
+      "feedback": "Correct method."
+    },
+    {
+      "criterion": "Final answer",
+      "marks_awarded": 2,
+      "marks_available": 2,
+      "evidence": "x = 3",
+      "feedback": "Final answer accepted."
+    }
+  ],
+  "tutor_feedback": "Correct method. State the final answer clearly."
+}
 ```
 
 ## Implementation notes
@@ -263,8 +282,11 @@ breakdown. All allocations, including zero-award criteria and final-answer
 marks, must appear in the breakdown. If arithmetic validation fails, the server
 requests one fresh grade before returning a retryable failure; it never accepts
 an inconsistent score. The result is provisional while `review_status` is `ai_graded`.
-Tutor review writes `tutor_score` and `tutor_feedback` and changes the status to
-`reviewed`, making the tutor result authoritative. The target API does not
-store or return a duplicate `final_score` or `final_feedback`.
+Tutor review writes `tutor_score`, optional `tutor_marks_breakdown`, and
+`tutor_feedback`, then changes the status to `reviewed`, making the tutor result
+authoritative. When supplied, the tutor breakdown must use allocations that add
+up to the question total, may not award more than each criterion allows, and the
+final `tutor_score` must equal the sum of reviewed marks. The target API does
+not store or return a duplicate `final_score` or `final_feedback`.
 
 Performance responses must identify their score source, date range, attempted-question count, and topic breakdown. Under the agreed tuition-centre model, tutors may access every student in their tuition centre; this may later be narrowed to assigned students/classes.

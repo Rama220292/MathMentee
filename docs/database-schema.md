@@ -93,6 +93,7 @@ never exposes the old names. New writes do not populate them.
 | `review_status` | enum | `pending`, `ai_graded`, or `reviewed` |
 | `reviewed_by` / `reviewed_at` | User reference / date | Tutor review metadata |
 | `tutor_score` / `tutor_feedback` | number / string | Authoritative reviewed result |
+| `tutor_marks_breakdown` | array | Authoritative tutor-reviewed criterion marks, allocations, evidence, and feedback |
 | timestamps | dates | `createdAt`, `updatedAt` |
 
 ### Handwriting input representation
@@ -109,6 +110,7 @@ New student submissions use the following handwriting-first representation.
 | `ai_score` / `ai_feedback` | number / string | Provisional schema-validated AI result |
 | `ai_marks_breakdown` | array | Marks and evidence for each marking criterion |
 | `tutor_score` / `tutor_feedback` | number / string | Authoritative reviewed result; absent before tutor review |
+| `tutor_marks_breakdown` | array | Tutor-edited criterion marks; absent before tutor review unless saved |
 | `reviewed_by` / `reviewed_at` | User reference / date | Tutor review audit metadata |
 
 Do not store large image binaries in ordinary MongoDB documents. Store private object references and access them through authorised backend endpoints or time-limited signed URLs.

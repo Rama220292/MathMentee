@@ -14,8 +14,9 @@ model answer, and mark allocation and returns a strictly structured score,
 feedback, and marks breakdown. The backend rejects inconsistent totals or marks
 that exceed their criterion allocation.
 
-A tutor may then record a score and feedback. The AI result remains stored for
-audit, while the tutor result becomes authoritative after review.
+A tutor may then review each awarded mark, including the final-answer marks,
+and record final feedback. The AI result remains stored for audit, while the
+tutor result becomes authoritative after review.
 
 ## Legacy score fields
 
@@ -39,12 +40,18 @@ The handwriting workflow has two score sources:
 | --- | --- |
 | `ai_score` / `ai_feedback` | Provisional automated result generated from the student-confirmed transcript |
 | `tutor_score` / `tutor_feedback` | Authoritative human-reviewed result; absent until review |
+| `tutor_marks_breakdown` | Authoritative human-reviewed criterion marks; prefilled from AI marks and editable by the tutor |
 
 `review_status` determines which result is authoritative. While the status is
 `ai_graded`, clients display the AI result as provisional. When the status is
 `reviewed`, clients display the tutor result as authoritative. The target model
 does not persist `final_score` or `final_feedback`, because those fields would
 duplicate one of the two score sources.
+
+The tutor review form presents each marking criterion, including the final-answer
+allocation, with AI-awarded marks prefilled. Tutors can change row marks and
+criterion notes. When a tutor breakdown is saved, the final tutor score must
+equal the sum of reviewed row marks.
 
 The existing deterministic matcher is not part of the scoring decision. It must
 not be presented as a general mathematical-equivalence engine or used as the

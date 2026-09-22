@@ -23,9 +23,19 @@ const updateSubmissionSchema = Joi.object({
 });
 
 
+const marksBreakdownItemSchema = Joi.object({
+  criterion: Joi.string().trim().min(1).required(),
+  marks_awarded: Joi.number().min(0).required(),
+  marks_available: Joi.number().min(0).required(),
+  evidence: Joi.string().allow("").required(),
+  feedback: Joi.string().allow("").required()
+});
+
 // REVIEW (teacher grading)
 const reviewSubmissionSchema = Joi.object({
   tutor_score: Joi.number().min(0).required(),
+
+  tutor_marks_breakdown: Joi.array().items(marksBreakdownItemSchema).min(1).optional(),
 
   tutor_feedback: Joi.string().allow("").required()
 });

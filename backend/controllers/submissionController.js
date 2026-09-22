@@ -43,6 +43,18 @@ const answerForGrading = (answer) => ({
   final_answer: answer.final_answer || ""
 });
 
+const sumMarksAwarded = (breakdown = []) => breakdown.reduce(
+  (sum, item) => sum + item.marks_awarded,
+  0
+);
+
+const sumMarksAvailable = (breakdown = []) => breakdown.reduce(
+  (sum, item) => sum + item.marks_available,
+  0
+);
+
+const marksEqual = (left, right) => Math.abs(Number(left) - Number(right)) < 0.001;
+
 const getPairedStudentIds = async (teacherId) => (
   await User.find({ role: "student", assignedTutor: teacherId }).distinct("_id")
 );
@@ -449,7 +461,29 @@ const reviewSubmission = async (req, res) => {
     if (req.body.tutor_score > totalMarks) {
       return res.status(400).json({ err: "Tutor score cannot exceed total marks" });
     }
+
+    if (req.body.tutor_marks_breakdown) {
+      const invalidItem = req.body.tutor_marks_breakdown.find(
+        (item) => item.marks_awarded > item.marks_available
+      );
+      if (invalidItem) {
+        return res.status(400).json({ err: "Tutor marks cannot exceed the available marks for a criterion" });
+      }
+
+      const awardedTotal = sumMarksAwarded(req.body.tutor_marks_breakdown);
+      const availableTotal = sumMarksAvailable(req.body.tutor_marks_breakdown);
+      if (!marksEqual(availableTotal, totalMarks)) {
+        return res.status(400).json({ err: "Tutor mark allocations must add up to the question total marks" });
+      }
+      if (!marksEqual(awardedTotal, req.body.tutor_score)) {
+        return res.status(400).json({ err: "Tutor score must equal the sum of reviewed marks" });
+      }
+    }
+
     submission.tutor_score = req.body.tutor_score;
+    if (req.body.tutor_marks_breakdown) {
+      submission.tutor_marks_breakdown = req.body.tutor_marks_breakdown;
+    }
     submission.tutor_feedback = req.body.tutor_feedback;
     submission.reviewed_by = req.user.id;
     submission.reviewed_at = new Date();

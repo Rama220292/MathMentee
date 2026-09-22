@@ -81,6 +81,7 @@ const submissionSchema = new mongoose.Schema({
   },
   reviewed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   tutor_score: { type: Number, min: 0 },
+  tutor_marks_breakdown: [marksBreakdownSchema],
   tutor_feedback: String,
   reviewed_at: Date,
 
