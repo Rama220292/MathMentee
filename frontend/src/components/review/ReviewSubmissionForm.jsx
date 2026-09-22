@@ -4,67 +4,20 @@ import toast from "react-hot-toast";
 import { reviewSubmission } from "../../services/submissionService";
 import { useNavigate } from "react-router-dom";
 import MathText from "../math/MathText";
-
-const toNumber = (value) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const totalAwarded = (rows) => rows.reduce(
-  (sum, row) => sum + toNumber(row.marks_awarded),
-  0
-);
-
-const marksMatch = (left, right) => Math.abs(Number(left) - Number(right)) < 0.001;
+import { buildReviewRows, marksMatch, totalAwarded } from "../../utils/reviewMarks";
 
 export default function ReviewSubmissionForm({ submission }) {
   const navigate = useNavigate();
   const maxMarks = submission.questionId?.total_marks;
-  const initialBreakdown = useMemo(() => {
-    const modelSteps = submission.questionId?.model_answer?.steps || [];
-    const savedBreakdown = submission.tutor_marks_breakdown;
-    const aiBreakdown = submission.marks_breakdown || [];
-    const source = savedBreakdown?.length ? savedBreakdown : aiBreakdown;
-
-    if (modelSteps.length || submission.questionId?.final_answer_marks != null) {
-      const schemeRows = [
-        ...modelSteps.map((step, index) => ({
-          label: `Step ${index + 1}`,
-          criterion: source[index]?.criterion || `Step ${index + 1}`,
-          modelContent: step.content,
-          marks_available: step.marks
-        })),
-        {
-          label: "Final answer",
-          criterion: source[modelSteps.length]?.criterion || "Final answer",
-          modelContent: submission.questionId?.model_answer?.final_answer || "",
-          marks_available: submission.questionId?.final_answer_marks || 0
-        }
-      ];
-
-      return schemeRows.map((row, index) => ({
-        ...row,
-        marks_awarded: source[index]?.marks_awarded ?? 0,
-        evidence: source[index]?.evidence || "",
-        feedback: source[index]?.feedback || ""
-      }));
-    }
-
-    return source.map((row, index) => ({
-      label: row.criterion || `Criterion ${index + 1}`,
-      criterion: row.criterion || `Criterion ${index + 1}`,
-      modelContent: "",
-      marks_awarded: row.marks_awarded ?? 0,
-      marks_available: row.marks_available ?? 0,
-      evidence: row.evidence || "",
-      feedback: row.feedback || ""
-    }));
-  }, [submission]);
+  const initialBreakdown = useMemo(() => buildReviewRows(submission), [submission]);
   const [reviewRows, setReviewRows] = useState(initialBreakdown);
+  const initialTutorScore = initialBreakdown.length
+    ? totalAwarded(initialBreakdown)
+    : submission.ai_score ?? "";
 
   const { register, handleSubmit, setValue } = useForm({
     defaultValues: {
-      tutor_score: submission.tutor_score ?? submission.ai_score ?? "",
+      tutor_score: submission.tutor_score ?? initialTutorScore,
       tutor_feedback: submission.tutor_feedback || ""
     }
   });
