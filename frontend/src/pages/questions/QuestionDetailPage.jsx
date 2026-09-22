@@ -69,6 +69,7 @@ export default function QuestionDetailPage() {
     question.updatedAt !== question.createdAt;
 
   const isArchived = Boolean(question?.archived_at);
+  const canViewModelAnswer = Boolean(question?.model_answer);
 
   const handleArchiveChange = async () => {
     const nextArchived = !isArchived;
@@ -148,26 +149,39 @@ export default function QuestionDetailPage() {
           {question.topic} • {question.level}
         </div>
 
-        {/* ✅ Final Answer INLINE */}
-        <div className="mb-4">
-          <span className="font-medium">Final Answer: </span>
-          <MathText>{question.model_answer?.final_answer}</MathText>
-          <span className="text-gray-500 ml-2">
-            ({question.final_answer_marks} marks)
-          </span>
-        </div>
+        {canViewModelAnswer ? (
+          <>
+            {/* Final Answer INLINE */}
+            <div className="mb-4">
+              <span className="font-medium">Final Answer: </span>
+              <MathText>{question.model_answer.final_answer}</MathText>
+              <span className="text-gray-500 ml-2">
+                ({question.final_answer_marks} marks)
+              </span>
+            </div>
 
-        {/* Steps */}
-        <h3 className="font-semibold mb-2">Model Answer Steps</h3>
+            {/* Steps */}
+            <h3 className="font-semibold mb-2">Model Answer Steps</h3>
 
-        <ul className="space-y-2">
-          {question.model_answer.steps.map((step, i) => (
-            <li key={i} className="flex justify-between">
-              <span><MathText>{step.content}</MathText></span>
-              <span className="text-gray-500">{step.marks} marks</span>
-            </li>
-          ))}
-        </ul>
+            <ul className="space-y-2">
+              {question.model_answer.steps.map((step, i) => (
+                <li key={i} className="flex justify-between">
+                  <span><MathText>{step.content}</MathText></span>
+                  <span className="text-gray-500">{step.marks} marks</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <div className="mt-6">
+            <button
+              onClick={() => navigate(`/submit/${question._id}`)}
+              className="w-full rounded-lg bg-green-500 px-4 py-3 font-medium text-white hover:bg-green-600"
+            >
+              Attempt Question
+            </button>
+          </div>
+        )}
 
         {/* Dates */}
         <div className="mt-4 text-xs text-gray-400">

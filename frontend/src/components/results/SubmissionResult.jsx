@@ -27,7 +27,7 @@ export default function SubmissionResult({ submission }) {
 
       <QuestionPanel question={submission.questionId} />
 
-      <StudentAnswerPanel answer={submission.structured_answer} />
+      <StudentAnswerPanel answer={submission.confirmed_answer || submission.structured_answer} />
 
       {submission.questionId.model_answer && (
         <ModelAnswerPanel
@@ -50,8 +50,8 @@ export default function SubmissionResult({ submission }) {
           )}
 
           <FinalScoreSummary
-            score={submission.final_score}
-            feedback={submission.final_feedback}
+            score={submission.tutor_score}
+            feedback={submission.tutor_feedback}
           />
         </>
       )}

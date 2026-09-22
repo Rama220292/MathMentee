@@ -5,24 +5,35 @@ These flows describe the intended user journey at a product level. Detailed wire
 ## Account access
 
 ```text
-Sign up → Verification email → Verify link → Login → Role-appropriate home
+Sign up → Student selects tutor if applicable → Verification email → Verify link
+→ Login → Role-appropriate home
 ```
 
 - Registration captures name, email, password, and role.
+- Student registration requires selecting a registered tutor who will review the
+  student's submissions.
 - An unverified user is told to verify before login.
 - The post-login destination should be decided with the dashboard/operating-model design.
 
 ## Student practice
 
 ```text
-Questions list → Filter/search → Question detail → Choose text, image, or handwriting input
-→ Extract/review/correct when needed → Submit working + final answer → Automated processing
-→ Submission result → My submissions → Revisit result
+Questions list → Filter/search → Question detail → Write answer free-form
+→ Upload private handwriting image → Extract transcript → Review/correct transcript
+→ Confirm transcript → AI grading → Provisional result → Tutor review
+→ Tutor-reviewed result → My submissions → Revisit result
 ```
 
 - The question list should only surface questions a student is allowed to attempt.
-- For image and handwriting input, the student must see and correct extracted content before marking begins.
+- Handwriting is the primary student answer-entry method in the first increment.
+  Text-based controls are used to amend OCR output rather than offered as a
+  separate primary entry path.
+- The student must see and correct the extracted content before marking begins.
+- The review screen should present the source handwriting alongside editable
+  mathematical steps and a final answer.
 - The result screen must distinguish automated feedback from tutor review.
+- An AI score is labelled provisional. After review, the tutor score is the
+  authoritative result.
 - If automated feedback is unavailable, the student should see a clear state rather than a misleading score.
 
 ## Student progress
@@ -54,7 +65,9 @@ automated feedback, and marks → Enter tutor score + feedback → Mark reviewed
 ```
 
 - The review screen should retain automated feedback as context after a tutor overrides it.
-- In a class-based future, the review queue should be scoped to the tutor's own students/classes.
+- The review queue is scoped to students paired with the signed-in tutor.
+- Review cards should show the student name, question title, status, submitted
+  date, and score context.
 
 ## Tutor progress view
 
@@ -63,7 +76,7 @@ Tutor dashboard → Student list → Select student → Overall performance
 → Topic breakdown → Relevant attempts → In-person or online support
 ```
 
-- In the initial tuition-centre model, tutors can open performance data for every student in their tuition centre.
+- In the pilot model, tutors can open performance data only for paired students.
 - Topic summaries should help a tutor identify where personalised support may be useful; they should not replace review of the underlying attempts.
 
 ## Empty and failure states

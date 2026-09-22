@@ -1,5 +1,12 @@
 # Database schema
 
+Application text data is stored in MongoDB. Deployed environments use a
+managed database configured through the backend-only `MONGO_URI`; development
+and production data must be separated. Private image binaries belong in S3,
+with MongoDB retaining only object references and metadata. Backup, restore,
+monitoring, and retention procedures must be established before a real-student
+pilot.
+
 ## Current entities
 
 ### User
@@ -9,7 +16,8 @@
 | `name` | string | Required |
 | `email` | string | Required, unique |
 | `hashedPassword` | string | Required; excluded from JSON output |
-| `role` | enum | `student` or `teacher` |
+| `role` | enum | `student`, `teacher`, or `content_manager` |
+| `assignedTutor` | User reference | Required for newly registered students; points to the teacher who may review that student's work |
 | `isVerified` | boolean | Email-verification state |
 | `verificationToken` / `verificationTokenExpiry` | string / date | Used during email verification |
 | timestamps | dates | `createdAt`, `updatedAt` |
@@ -61,36 +69,54 @@ Each explicit save of complete question content creates an immutable version.
 
 ### Submission
 
+The model retains legacy typed fields so existing documents remain readable,
+but new student attempts use the handwriting fields below.
+Legacy `teacher_score` and `final_score` fields are hidden migration-only fields;
+response mapping translates a historical reviewed result to `tutor_score` and
+never exposes the old names. New writes do not populate them.
+
 | Field | Type | Notes |
 | --- | --- | --- |
 | `studentId` | User reference | Required |
 | `questionId` | Question reference | Required |
 | `questionVersionId` | QuestionVersion reference | Exact published version used for the attempt |
 | `question_snapshot` | object | Defensive immutable copy of the question and marking scheme used for the attempt |
+| `input_method` | enum | `handwriting` for new student attempts; `text` identifies legacy submissions |
+| `processing_status` | enum | Upload, extraction, grading, failure, and review lifecycle |
+| `source_asset` | object | Private S3 key and verified PNG metadata; excluded from ordinary queries |
+| `extracted_answer` | object | Untouched OCR output, review notes, and extraction time |
+| `confirmed_answer` | object | Student-amended steps and final answer used for grading |
 | `raw_input` | string | Original joined working input |
 | `structured_answer` | object | `final_answer` and array of `steps` |
-| `ai_score` / `ai_feedback` | number / string | AI output |
-| `marks_breakdown` | array | Step index, marks awarded, feedback |
+| `ai_score` / `ai_feedback` | number / string | Provisional AI output |
+| `marks_breakdown` | array | AI criterion, allocation, awarded marks, evidence, and feedback |
 | `review_status` | enum | `pending`, `ai_graded`, or `reviewed` |
-| `reviewed_by` / `reviewedAt` | User reference / date | Tutor review metadata (current field design) |
-| `teacher_score` / `teacher_feedback` | number / string | Tutor result; field names reflect the current implementation |
-| `final_score` / `final_feedback` | number / string | Current official result |
+| `reviewed_by` / `reviewed_at` | User reference / date | Tutor review metadata |
+| `tutor_score` / `tutor_feedback` | number / string | Authoritative reviewed result |
 | timestamps | dates | `createdAt`, `updatedAt` |
 
-### Planned input representation
+### Handwriting input representation
 
-The current schema supports typed `raw_input` and `structured_answer` only. To support image and free-form handwriting without losing the source material, introduce an input representation for both questions and submissions.
+New student submissions use the following handwriting-first representation.
 
 | Field | Type | Purpose |
 | --- | --- | --- |
-| `input_method` | enum | `text`, `image`, or `handwriting` |
-| `original_assets` | array | Private object-storage references and file metadata for original images or handwriting renders |
-| `raw_input` | string | Typed input or extracted raw text |
-| `extraction` | object | Provider, status, confidence, extracted content, and error information |
-| `structured_answer` / structured question content | object | User-confirmed content used by marking and display |
-| `confirmedAt` | date | When the author or student confirmed/corrected extraction |
+| `input_method` | enum | `handwriting` for the first student increment; leaves room for later alternatives |
+| `source_asset` | object | Private S3 object key, verified content type, size, upload time, and confirmation time |
+| `processing_status` | enum | `uploaded`, `extracting`, `extracted`, `grading`, `ai_graded`, `grading_error`, or `reviewed` |
+| `extracted_answer` | object | Untouched OCR/vision output containing raw text, mathematical steps, final answer, and extraction time |
+| `confirmed_answer` | object | Student-amended steps and final answer, with `confirmed_at`; the only answer used for grading |
+| `ai_score` / `ai_feedback` | number / string | Provisional schema-validated AI result |
+| `ai_marks_breakdown` | array | Marks and evidence for each marking criterion |
+| `tutor_score` / `tutor_feedback` | number / string | Authoritative reviewed result; absent before tutor review |
+| `reviewed_by` / `reviewed_at` | User reference / date | Tutor review audit metadata |
 
 Do not store large image binaries in ordinary MongoDB documents. Store private object references and access them through authorised backend endpoints or time-limited signed URLs.
+
+The target model does not include `final_score` or `final_feedback`.
+`review_status` selects the displayed result: `ai_score` while provisional and
+`tutor_score` after review. It also does not include an OCR or grading confidence
+field in the first increment.
 
 ## Performance data
 
@@ -101,6 +127,7 @@ Overall and topic-specific scores should initially be derived from submissions r
 ```text
 User (content manager) 1 ─── * Question
 User (content manager) 1 ─── * QuestionImageUpload ─── 0..1 Question
+User (tutor) 1 ─── * User (assigned students)
 User (student) 1 ─── * Submission * ─── 1 Question
 User (tutor) 1 ─── * Submission (reviewed_by)
 ```
@@ -117,8 +144,18 @@ User (tutor) 1 ─── * Submission (reviewed_by)
 - Archiving preserves the question, every version, private source assets, and submission history; restoring returns it to `ready` and unpublished.
 - Private `source_asset` fields are excluded from ordinary question queries and explicitly selected only for content-manager authoring responses.
 - Students and tutors see only published questions in question listings and direct question lookups.
-- A submission begins as `pending`, becomes `ai_graded` after automated processing, and becomes `reviewed` after teacher review.
+- In the target handwriting workflow, a submission progresses through upload,
+  extraction, student confirmation, AI grading, and tutor review. Grading cannot
+  start until `confirmed_answer` exists.
+- The source image remains private in S3. MongoDB retains both the untouched
+  extracted transcript and the student's confirmed transcript.
+- An `ai_graded` submission exposes a provisional AI result. A `reviewed`
+  submission uses the tutor result as authoritative without copying it into a
+  separate final-score field.
 - A student cannot update a submission once it is reviewed.
+- Teachers can list, view, access source images for, and review submissions
+  only when the submission belongs to a student whose `assignedTutor` is that
+  teacher. Content managers retain broader administrative review access.
 
 ## Likely future entities
 
@@ -127,7 +164,7 @@ These should be added only when supported by agreed user stories:
 | Entity | Enables |
 | --- | --- |
 | Tuition centre / workspace | Organisation boundary for the shared question bank, users, and future multi-centre access |
-| Class / cohort | Tutor-to-student membership if all-tutor access is later narrowed |
+| Class / cohort | Grouping above direct tutor-to-student membership |
 | Assignment | Distributing questions with due dates and release settings |
 | Attempt | Multiple named or versioned attempts per assignment/question |
 | Rubric | Richer criteria beyond exact model-step matching |
@@ -140,4 +177,6 @@ These should be added only when supported by agreed user stories:
 - Preserve a snapshot of the question and rubric on each submission versus rely on the current question document.
 - Define unique-attempt rules: one submission per question, unlimited practice, or assignment-specific attempts.
 - Add indexes for common queries once data size justifies them, especially `Submission(studentId, createdAt)` and review-queue filters.
-- Define how original input assets are retained, deleted, and protected, including consent and data-retention requirements for student work.
+- Set a specific retention period for reviewed handwriting images. Until that
+  policy is accepted, retain them privately so tutors can compare the source
+  work with both transcripts.

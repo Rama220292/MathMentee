@@ -57,7 +57,9 @@ This roadmap is outcome-led. It should be revisited after requirements validatio
 
 - Build an evaluation dataset from tutor-marked examples.
 - Improve answer checking by question type and investigate symbolic equivalence where it has demonstrated value.
-- Add robust AI structured-output validation, confidence/review signals, and retry handling.
+- Add robust AI structured-output validation, evidence-based review signals,
+  and retry handling. Do not add a confidence field until it can be calibrated
+  and shown to improve review decisions.
 - Support richer rubrics where step-text matching is insufficient.
 
 ## Phase 5 — Operational maturity

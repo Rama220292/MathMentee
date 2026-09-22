@@ -53,15 +53,26 @@ MathMentee supports structured secondary-school mathematics practice for student
 
 ### Submission and feedback
 
-- Students can submit working steps and a final answer to a question.
-- The system records the original response, marks breakdown, automated feedback, and submission status.
+- In the first student-input increment, students submit working and a final
+  answer through a free-form handwriting surface.
+- The handwriting is retained as a private S3 image accessible only through
+  authorised operations.
+- The system transcribes the handwriting into editable mathematical content;
+  the student must review and confirm it before grading.
+- The system stores the untouched extracted transcript and the student's
+  amended confirmed transcript in MongoDB.
+- The system records a provisional AI score and feedback, submission status,
+  and any later tutor score and feedback.
 - Students can view their own submissions and results.
-- A tutor can review a submission and replace the automated score and feedback.
+- A tutor can review the source handwriting and transcripts. Their score and
+  feedback become authoritative without overwriting the AI result.
 
 ## Quality requirements
 
 - **Privacy:** protect account credentials and keep student submissions accessible only to their owner and authorised tutors.
 - **Transparency:** distinguish automated feedback from tutor-reviewed feedback.
+- **Data minimisation:** retain handwriting images because they support tutor
+  review and transcription audit, and define a deletion period before a pilot.
 - **Reliability:** a failed AI response must not corrupt or lose a submission.
 - **Usability:** a student should be able to submit working in a clear, low-friction form.
 - **Accessibility:** future UI work should target keyboard navigation, readable contrast, and usable mobile layouts.

@@ -26,16 +26,20 @@ As a student, I want to browse published questions by topic and level so that I 
 
 ### S3 — Submit mathematical working
 
-As a student, I want to submit my mathematical working and final answer as typed text, a photo, or free-form handwriting so that I can use the format that best represents my solution and receive feedback on my method as well as my answer.
+As a student, I want to write my mathematical working free-form and verify how
+it was transcribed so that my own intended solution is graded.
 
 **Acceptance criteria**
 
-- I can choose typed text, image upload, or free-form handwriting as my submission method.
-- For typed text, I can add and remove working steps and enter a final answer.
-- For image and handwriting submissions, the system processes the content into a structured form suitable for marking.
-- I can review and correct extracted text and mathematical content before submitting it for marking.
+- I can write working and a final answer using a free-form handwriting surface.
+- The system privately uploads the rendered handwriting image and processes it
+  into structured mathematical content.
+- I can review and correct the extracted steps and final answer using text and
+  mathematical editing controls before submitting them for marking.
+- Grading cannot begin until I explicitly confirm the amended transcript.
 - Required fields are validated before submission.
-- My original submission and its processed/structured representation are saved with the question and time of submission.
+- My private source image, untouched extracted transcript, amended confirmed
+  transcript, question version, and time of submission are retained.
 
 ### S4 — Understand feedback
 
@@ -54,7 +58,8 @@ As a student, I want to view prior attempts so that I can track and revisit my p
 **Acceptance criteria**
 
 - My submissions are listed newest first.
-- Each entry shows question, date, status, and current score.
+- Each entry shows question, date, status, and either the provisional AI score
+  or authoritative tutor score.
 - I can open the full result for an attempt.
 
 ### S6 — Understand my performance by topic
@@ -125,8 +130,11 @@ As the system, I need to evaluate an attempt and preserve the result so that fee
 
 **Acceptance criteria**
 
-- The system stores deterministic marks, AI feedback, and review status separately.
-- The system preserves both original image/handwriting input and the processed content used for marking.
+- The system stores provisional AI results, tutor-reviewed results, and review
+  status separately; it does not duplicate either result into a final-score
+  field.
+- The system preserves the private handwriting image, untouched extracted
+  transcript, and student-confirmed transcript used for marking.
 - Extracted content is not used for marking until the submitting user has had an opportunity to review it.
 - If AI feedback fails, the submission is still retained with a clear recoverable state.
 - The system never represents an AI score as a tutor-reviewed score.

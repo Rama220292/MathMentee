@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
+import SelectTutorPage from "../pages/auth/SelectTutorPage";
 import VerifyPage from "../pages/auth/VerifyPage";
 import QuestionsPage from "../pages/questions/QuestionsPage";
 import QuestionDetailPage from "../pages/questions/QuestionDetailPage";
@@ -25,6 +26,7 @@ export default function AppRoutes() {
       {/* Public */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/signup/select-tutor" element={<SelectTutorPage />} />
       <Route path="/" element={<HomeRedirect />} />
       <Route path="/verify" element ={<VerifyPage />} />
 

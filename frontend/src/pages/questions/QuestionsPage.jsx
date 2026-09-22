@@ -3,13 +3,16 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import QuestionCard from "../../components/questions/QuestionCard";
 import { getQuestions } from "../../services/questionService";
+import { getMySubmissions } from "../../services/submissionService";
 import QuestionFilters from "../../components/questions/QuestionFilters";
 
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
   const [search, setSearch] = useState("");
   const [topicFilter, setTopicFilter] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
+  const [attemptFilter, setAttemptFilter] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const navigate = useNavigate()
@@ -27,6 +30,51 @@ export default function QuestionsPage() {
 
     fetchQuestions();
   }, [refreshVersion, showArchived]);
+
+  useEffect(() => {
+    if (user?.role !== "student") {
+      return;
+    }
+
+    const fetchSubmissions = async () => {
+      try {
+        const data = await getMySubmissions();
+        setSubmissions(Array.isArray(data) ? data : []);
+      } catch {
+        toast.error("Failed to load previous attempts");
+      }
+    };
+
+    fetchSubmissions();
+  }, [user?.role]);
+
+  const attemptedQuestionIds = useMemo(() => new Set(
+    submissions
+      .map((submission) => {
+        const question = submission.questionId;
+        return typeof question === "string" ? question : question?._id;
+      })
+      .filter(Boolean)
+  ), [submissions]);
+
+  const lastAttemptedByQuestionId = useMemo(() => {
+    const attemptsByQuestion = new Map();
+
+    submissions.forEach((submission) => {
+      const question = submission.questionId;
+      const questionId = typeof question === "string" ? question : question?._id;
+      const attemptedAt = submission.createdAt;
+
+      if (!questionId || !attemptedAt) return;
+
+      const previousAttemptedAt = attemptsByQuestion.get(questionId);
+      if (!previousAttemptedAt || new Date(attemptedAt) > new Date(previousAttemptedAt)) {
+        attemptsByQuestion.set(questionId, attemptedAt);
+      }
+    });
+
+    return attemptsByQuestion;
+  }, [submissions]);
 
   const filteredQuestions = useMemo(() => {
     let result = questions;
@@ -51,8 +99,16 @@ export default function QuestionsPage() {
     result = result.filter((q) => q.level === levelFilter);
   }
 
+  if (attemptFilter === "attempted") {
+    result = result.filter((q) => attemptedQuestionIds.has(q._id));
+  }
+
+  if (attemptFilter === "not_attempted") {
+    result = result.filter((q) => !attemptedQuestionIds.has(q._id));
+  }
+
     return result;
-  }, [search, topicFilter, levelFilter, questions]);
+  }, [search, topicFilter, levelFilter, attemptFilter, attemptedQuestionIds, questions]);
 
   const topics = [...new Set(questions.map((q) => q.topic))];
   const levels = [...new Set(questions.map((q) => q.level))];
@@ -129,6 +185,9 @@ export default function QuestionsPage() {
             setTopicFilter={setTopicFilter}
             levelFilter={levelFilter}
             setLevelFilter={setLevelFilter}
+            attemptFilter={attemptFilter}
+            setAttemptFilter={setAttemptFilter}
+            showAttemptFilter={user?.role === "student"}
             topics={topics}
             levels={levels}
           />
@@ -143,6 +202,8 @@ export default function QuestionsPage() {
           <QuestionCard
             key={q._id}
             question={q}
+            hasAttempted={attemptedQuestionIds.has(q._id)}
+            lastAttemptedAt={lastAttemptedByQuestionId.get(q._id)}
             refresh={() => setRefreshVersion((version) => version + 1)}
           />
           ))}

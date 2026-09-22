@@ -4,7 +4,6 @@ const test = require("node:test");
 const submissionModelPath = require.resolve("../models/Submission");
 const questionModelPath = require.resolve("../models/Question");
 const questionVersionModelPath = require.resolve("../models/QuestionVersion");
-const gradingServicePath = require.resolve("../services/gradingService");
 const aiServicePath = require.resolve("../services/aiService");
 const versionServicePath = require.resolve("../services/questionVersionService");
 const controllerPath = require.resolve("../controllers/submissionController");
@@ -51,19 +50,21 @@ test("pins a new submission to the published question version", async () => {
       }
     }
   };
-  require.cache[gradingServicePath] = {
-    exports: (_answer, gradingVersion) => {
+  require.cache[aiServicePath] = {
+    exports: async (_answer, gradingVersion) => {
       gradedQuestion = gradingVersion;
       return {
-        stepResults: [{ marksAwarded: 1, correct: true }],
-        finalCorrect: true,
         score: 2,
-        feedback: ["Correct"]
+        feedback: "Correct",
+        marks_breakdown: [{
+          criterion: "Method",
+          marks_awarded: 2,
+          marks_available: 2,
+          evidence: "x = 3",
+          feedback: "Correct"
+        }]
       };
     }
-  };
-  require.cache[aiServicePath] = {
-    exports: async () => ({ score: 2, feedback: "Correct" })
   };
   require.cache[versionServicePath] = {
     exports: {
@@ -146,13 +147,13 @@ test("student submission responses expose AI feedback without marking secrets", 
     structured_answer: { final_answer: "x = 3", steps: ["Divide by 2"] },
     ai_score: 2,
     ai_feedback: "Correct reasoning.",
-    marks_breakdown: [{ step_index: 0, marks_awarded: 1 }],
-    final_answer_correct: true,
+    marks_breakdown: [{ criterion: "Method", marks_awarded: 2, marks_available: 2 }],
     final_score: 2,
     final_feedback: "Correct",
     review_status: "ai_graded"
   };
   const query = {
+    select() { return this; },
     populate() { return this; },
     then(resolve, reject) { return Promise.resolve(submission).then(resolve, reject); }
   };
@@ -178,4 +179,44 @@ test("student submission responses expose AI feedback without marking secrets", 
   assert.equal("questionVersionId" in response.body, false);
   assert.equal("marks_breakdown" in response.body, false);
   assert.equal("final_score" in response.body, false);
+});
+
+test("maps a legacy reviewed score to the tutor result without exposing legacy fields", async () => {
+  const studentId = "507f1f77bcf86cd799439011";
+  const submission = {
+    _id: "507f191e810c19729de860ed",
+    studentId: { _id: studentId },
+    questionId: { _id: "507f191e810c19729de860eb" },
+    question_snapshot: {
+      version_number: 1,
+      title: "Equation",
+      question_text: "Solve x = 3",
+      topic: "Algebra",
+      level: "Sec1",
+      model_answer: { final_answer: "x = 3", steps: [] },
+      final_answer_marks: 1,
+      total_marks: 1
+    },
+    review_status: "reviewed",
+    teacher_score: 1,
+    teacher_feedback: "Correct"
+  };
+  const query = {
+    select() { return this; },
+    populate() { return this; },
+    then(resolve, reject) { return Promise.resolve(submission).then(resolve, reject); }
+  };
+  require.cache[submissionModelPath] = { exports: { findById: () => query } };
+  delete require.cache[controllerPath];
+  const { getSubmissionById } = require(controllerPath);
+  const result = createResponse();
+
+  await getSubmissionById({
+    params: { id: submission._id },
+    user: { id: studentId, role: "student" }
+  }, result);
+
+  assert.equal(result.body.tutor_score, 1);
+  assert.equal(result.body.tutor_feedback, "Correct");
+  assert.equal("teacher_score" in result.body, false);
 });

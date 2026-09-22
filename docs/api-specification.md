@@ -22,13 +22,17 @@ Base path: `/api`. All request and response bodies are JSON. Protected endpoints
 | --- | --- | --- |
 | `POST` | `/auth/signup` | No | Register a student or teacher and send verification email |
 | `POST` | `/auth/login` | No | Sign in and receive JWT plus basic user data |
+| `GET` | `/auth/tutors` | No | List registered tutors for student signup pairing |
 | `GET` | `/auth/verify?token=…` | No | Verify an email token |
 
 `POST /auth/signup` request:
 
 ```json
-{ "name": "Aisha Tan", "email": "aisha@example.com", "password": "SecurePass1!", "role": "student" }
+{ "name": "Aisha Tan", "email": "aisha@example.com", "password": "SecurePass1!", "role": "student", "tutorId": "<teacher-user-id>" }
 ```
+
+Students must choose a registered teacher during signup. Teacher and content
+manager signup requests must not include `tutorId`.
 
 `POST /auth/login` response:
 
@@ -60,8 +64,13 @@ full authoring representation.
 Student submission responses contain the published question prompt, the
 student's own answer, and the automated score and feedback. They exclude the
 question snapshot's model answer, marking allocation, and deterministic marking
-breakdown. A tutor-reviewed final score and feedback are included only after the
-submission reaches `reviewed` status.
+breakdown. `tutor_score` and `tutor_feedback` are included only after the
+submission reaches `reviewed` status and are then authoritative.
+
+The paragraph above describes the legacy typed-submission API. The handwriting
+contract below replaces its scoring representation with separate
+`ai_score` and `tutor_score` fields and does not introduce a stored
+`final_score`.
 
 Question request shape:
 
@@ -182,11 +191,11 @@ ready or is explicitly published.
 | `POST` | `/submissions` | Student | Create and automatically grade a submission |
 | `PUT` | `/submissions/:id` | Student owner | Update a submission before review |
 | `GET` | `/submissions/my` | Student | List own submissions |
-| `GET` | `/submissions/:id` | Student owner or teacher | Fetch one submission |
-| `GET` | `/submissions` | Tutor (planned; teacher currently) | List all submissions |
-| `GET` | `/submissions/pending` | Tutor (planned; teacher currently) | List submissions not reviewed |
-| `GET` | `/submissions/:id/review` | Tutor (planned; teacher currently) | Fetch a submission for review |
-| `PUT` | `/submissions/:id/review` | Tutor (planned; teacher currently) | Save teacher score and feedback |
+| `GET` | `/submissions/:id` | Student owner, paired teacher, or content manager | Fetch one submission |
+| `GET` | `/submissions` | Teacher or content manager | List reviewable submissions; teachers see only paired students |
+| `GET` | `/submissions/pending` | Teacher or content manager | List AI-graded submissions; teachers see only paired students |
+| `GET` | `/submissions/:id/review` | Paired teacher or content manager | Fetch a submission for review |
+| `PUT` | `/submissions/:id/review` | Paired teacher or content manager | Save tutor score and feedback |
 
 Create-submission request:
 
@@ -201,7 +210,7 @@ Create-submission request:
 Review request:
 
 ```json
-{ "teacher_score": 3, "teacher_feedback": "Correct method. State the final answer clearly." }
+{ "tutor_score": 3, "tutor_feedback": "Correct method. State the final answer clearly." }
 ```
 
 ## Implementation notes
@@ -211,18 +220,51 @@ Review request:
 - The current question response includes `model_answer` and mark allocations for any signed-in user. This must be split into role-appropriate response representations before students are given access to the shared question bank.
 - The specification describes the current API. Any breaking changes should be recorded in `product-decisions.md` and implemented consistently in both client and server.
 
-## Planned API additions
+## Handwriting submission API
 
-The endpoints below are planned contracts, not implemented endpoints. Their exact request shapes depend on the selected storage and OCR/vision provider.
+These endpoints implement the student handwriting workflow.
 
 | Method | Path | Role | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/uploads` | Signed-in user | Create an authorised upload for question or submission image/handwriting input |
-| `POST` | `/extractions` | Signed-in user | Request OCR/vision processing for an uploaded asset or handwriting payload |
-| `GET` | `/extractions/:id` | Owner or authorised teacher | Check extraction status and result |
+| `POST` | `/submissions/handwriting-upload-requests` | Student | Validate image metadata and create an owner-scoped, short-lived S3 upload URL |
+| `POST` | `/submissions/handwriting-upload-confirmations` | Student | Verify the uploaded private object and create a submission draft pinned to a question version |
+| `POST` | `/submissions/:id/extractions` | Student owner | Transcribe the draft's private handwriting image without sending the model answer to the provider |
+| `PATCH` | `/submissions/:id/transcript` | Student owner | Save corrections to the editable transcript before confirmation |
+| `POST` | `/submissions/:id/confirm` | Student owner | Freeze the confirmed transcript and begin AI grading |
+| `GET` | `/submissions/:id/source-image` | Student owner or authorised tutor | Create a short-lived read URL for the private handwriting image |
+
+Performance endpoints remain planned:
+
+| Method | Path | Role | Purpose |
+| --- | --- | --- | --- |
 | `GET` | `/performance/me` | Student | Return own overall and topic-specific performance summary |
 | `GET` | `/performance/students/:studentId` | Tutor | Return one student's overall and topic-specific performance summary |
 
-For extracted input, APIs must return the original input reference, extraction status, confidence where available, and editable structured content. A separate confirmation/update operation must record the user's corrected content before it is used for marking.
+The upload uses a private key under
+`submission-source-images/<student-id>/<upload-id>.png`. Student-facing
+responses never contain a public object URL or AWS credential. An authorised
+tutor may receive time-limited access to the original image when reviewing the
+submission.
+
+Extraction returns editable steps and a final answer. The first increment does
+not return an OCR confidence field. MongoDB retains both the untouched
+`extracted_answer` and the student-amended `confirmed_answer`; only the latter
+is supplied to the grading operation.
+
+If grading fails after confirmation, the owner can save corrections again via
+`PATCH /submissions/:id/transcript`. This accepts `grading_error` only when
+extraction and confirmation timestamps exist and review is still `pending`;
+it returns the draft to `extracted` and requires a fresh confirmation. Failed
+extraction, in-progress grading, completed grading, and tutor-reviewed work
+remain ineligible for this retry path.
+
+AI grading returns schema-validated `ai_score`, `ai_feedback`, and an AI marks
+breakdown. All allocations, including zero-award criteria and final-answer
+marks, must appear in the breakdown. If arithmetic validation fails, the server
+requests one fresh grade before returning a retryable failure; it never accepts
+an inconsistent score. The result is provisional while `review_status` is `ai_graded`.
+Tutor review writes `tutor_score` and `tutor_feedback` and changes the status to
+`reviewed`, making the tutor result authoritative. The target API does not
+store or return a duplicate `final_score` or `final_feedback`.
 
 Performance responses must identify their score source, date range, attempted-question count, and topic breakdown. Under the agreed tuition-centre model, tutors may access every student in their tuition centre; this may later be narrowed to assigned students/classes.

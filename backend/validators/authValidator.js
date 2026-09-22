@@ -23,7 +23,13 @@ const signupSchema = Joi.object({
 
   role: Joi.string()
     .valid("student", "teacher", "content_manager")
-    .required()
+    .required(),
+
+  tutorId: Joi.when("role", {
+    is: "student",
+    then: Joi.string().hex().length(24).required(),
+    otherwise: Joi.forbidden()
+  })
 });
 
 const loginSchema = Joi.object({

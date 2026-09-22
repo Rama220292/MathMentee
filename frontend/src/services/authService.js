@@ -11,6 +11,11 @@ export const signup = async (data) => {
   return res.data;
 };
 
+export const getTutors = async () => {
+  const res = await api.get("/auth/tutors");
+  return res.data;
+};
+
 export const verifyEmail = async (token) => {
   const res = await api.get(`/auth/verify?token=${token}`);
   return res.data;

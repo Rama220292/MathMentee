@@ -5,26 +5,32 @@ import { useNavigate } from "react-router-dom";
 
 export default function ReviewSubmissionForm({ submission }) {
   const navigate = useNavigate();
+  const maxMarks = submission.questionId?.total_marks;
 
   const { register, handleSubmit } = useForm({
     defaultValues: {
-      teacher_score: submission.final_score || "",
-      teacher_feedback: submission.final_feedback || ""
+      tutor_score: submission.tutor_score ?? submission.ai_score ?? "",
+      tutor_feedback: submission.tutor_feedback || ""
     }
   });
 
   const onSubmit = async (data) => {
     try {
-      const score = Number(data.teacher_score);
+      const score = Number(data.tutor_score);
 
       if (isNaN(score)) {
-        toast.error("Teacher score must be a valid number");
+        toast.error("Tutor score must be a valid number");
+        return;
+      }
+
+      if (Number.isFinite(maxMarks) && score > maxMarks) {
+        toast.error(`Tutor score cannot exceed ${maxMarks}`);
         return;
       }
 
       const payload = {
-        teacher_score: score,
-        teacher_feedback: data.teacher_feedback || ""
+        tutor_score: score,
+        tutor_feedback: data.tutor_feedback || ""
       };
 
       await reviewSubmission(submission._id, payload);
@@ -34,7 +40,7 @@ export default function ReviewSubmissionForm({ submission }) {
 
     } catch (err) {
       console.error("BACKEND ERROR:", err.response?.data || err);
-      toast.error("Failed to save review");
+      toast.error(err.response?.data?.err || "Failed to save review");
     }
   };
 
@@ -43,30 +49,34 @@ export default function ReviewSubmissionForm({ submission }) {
       onSubmit={handleSubmit(onSubmit)}
       className="bg-white p-6 rounded-lg space-y-4"
     >
-      <h2 className="text-lg font-semibold">Teacher Review</h2>
+      <h2 className="text-lg font-semibold">Tutor Review</h2>
 
       {/* AI Score */}
       <div>
         <p className="text-sm text-gray-500">AI Score</p>
-        <p className="font-medium">{submission.ai_score}</p>
+        <p className="font-medium">
+          {submission.ai_score ?? "-"}
+          {Number.isFinite(maxMarks) ? ` / ${maxMarks}` : ""}
+        </p>
       </div>
 
-      {/* Teacher Score */}
+      {/* Tutor Score */}
       <div>
-        <label className="block mb-1">Teacher Score</label>
+        <label className="block mb-1">Tutor Score</label>
         <input
           type="number"
           step="1"
-          {...register("teacher_score", { required: true })}
+          max={maxMarks}
+          {...register("tutor_score", { required: true })}
           className="w-full border p-2 rounded"
         />
       </div>
 
       {/* Feedback */}
       <div>
-        <label className="block mb-1">Teacher Feedback</label>
+        <label className="block mb-1">Tutor Feedback</label>
         <textarea
-          {...register("teacher_feedback")}
+          {...register("tutor_feedback")}
           className="w-full border p-2 rounded"
         />
       </div>

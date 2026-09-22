@@ -9,7 +9,12 @@ import {
 import ConfirmButton from "../common/ConfirmButton";
 import MathText from "../math/MathText";
 
-export default function QuestionCard({ question, refresh }) {
+export default function QuestionCard({
+  question,
+  refresh,
+  hasAttempted = false,
+  lastAttemptedAt
+}) {
   const [open, setOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [publicationTarget, setPublicationTarget] = useState(null);
@@ -17,6 +22,13 @@ export default function QuestionCard({ question, refresh }) {
   const user = JSON.parse(localStorage.getItem("user"));
 
   const isArchived = Boolean(question.archived_at);
+  const isStudentAttempted = user?.role === "student" && hasAttempted;
+  const cardClassName = isStudentAttempted
+    ? "bg-gray-200 border border-gray-300"
+    : "bg-white";
+  const lastAttemptedLabel = lastAttemptedAt
+    ? new Date(lastAttemptedAt).toLocaleDateString()
+    : "";
 
   const handleArchiveChange = async () => {
     const nextArchived = !isArchived;
@@ -53,28 +65,36 @@ export default function QuestionCard({ question, refresh }) {
   };
 
   return (
-    <div className="bg-white rounded-xl p-5 shadow-md">
+    <div className={`${cardClassName} rounded-xl p-5 shadow-md`}>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-semibold">{question.title}</h2>
-        {user?.role === "content_manager" && (
-          <span
-            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-              isArchived
-                ? "bg-gray-200 text-gray-700"
-                : question.isPublished
-                ? "bg-green-100 text-green-700"
-                : "bg-amber-100 text-amber-700"
-            }`}
-          >
-            {isArchived
-              ? "Archived"
-              : question.has_unpublished_changes
-                ? "Published · changes pending"
-                : question.isPublished
-                  ? "Published"
-                  : "Unpublished"}
-          </span>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-lg font-semibold">{question.title}</h2>
+          {user?.role === "content_manager" && (
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                isArchived
+                  ? "bg-gray-200 text-gray-700"
+                  : question.isPublished
+                  ? "bg-green-100 text-green-700"
+                  : "bg-amber-100 text-amber-700"
+              }`}
+            >
+              {isArchived
+                ? "Archived"
+                : question.has_unpublished_changes
+                  ? "Published · changes pending"
+                  : question.isPublished
+                    ? "Published"
+                    : "Unpublished"}
+            </span>
+          )}
+        </div>
+
+        {isStudentAttempted && lastAttemptedLabel && (
+          <div className="text-sm font-medium text-gray-600">
+            Last Attempted: {lastAttemptedLabel}
+          </div>
         )}
       </div>
 
@@ -96,9 +116,13 @@ export default function QuestionCard({ question, refresh }) {
                     {user?.role === "student" && (
                       <button
                         onClick={() => navigate(`/submit/${question._id}`)}
-                        className="px-3 py-1 bg-green-500 text-white rounded"
+                        className={`px-3 py-1 text-white rounded ${
+                          isStudentAttempted
+                            ? "bg-indigo-500 hover:bg-indigo-600"
+                            : "bg-green-500 hover:bg-green-600"
+                        }`}
                       >
-                        Attempt Question
+                        {isStudentAttempted ? "Re-Attempt Question" : "Attempt Question"}
                       </button>
                     )}
 

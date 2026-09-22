@@ -9,11 +9,19 @@ const saltRounds = 11;
 
 const signup = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, tutorId } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ err: "Email already registered" });
+    }
+
+    let assignedTutor;
+    if (role === "student") {
+      assignedTutor = await User.findOne({ _id: tutorId, role: "teacher" });
+      if (!assignedTutor) {
+        return res.status(400).json({ err: "Selected tutor was not found" });
+      }
     }
 
     const hashedPassword = bcrypt.hashSync(password, saltRounds);
@@ -28,6 +36,7 @@ const signup = async (req, res) => {
       email,
       hashedPassword,
       role,
+      assignedTutor: assignedTutor?._id,
       isVerified: false,
       verificationToken,
       verificationTokenExpiry
@@ -82,6 +91,18 @@ const login = async (req, res) => {
   }
 };
 
+const getTutors = async (req, res) => {
+  try {
+    const tutors = await User.find({ role: "teacher" })
+      .select("name email")
+      .sort({ name: 1, email: 1 });
+
+    res.json(tutors);
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+};
+
 
 const verifyEmail = async (req, res) => {
   try {
@@ -109,4 +130,4 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, verifyEmail };
+module.exports = { getTutors, signup, login, verifyEmail };

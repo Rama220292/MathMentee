@@ -20,11 +20,11 @@ export default function SubmissionsPage() {
   }, []);
 
   const students = [
-    ...new Set(submissions.map((s) => s.studentId?.name))
+    ...new Set(submissions.map((s) => s.studentId?.name).filter(Boolean))
   ];
 
   const levels = [
-    ...new Set(submissions.map((s) => s.questionId?.level))
+    ...new Set(submissions.map((s) => s.questionId?.level).filter(Boolean))
   ];
 
   const filtered = useMemo(() => {
@@ -35,6 +35,8 @@ export default function SubmissionsPage() {
       result = result.filter((s) =>
         [
           s.studentId?.name,
+          s.questionId?.title,
+          s.questionId?.topic,
           s.review_status,
           s.questionId?.level
         ]

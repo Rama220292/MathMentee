@@ -5,6 +5,9 @@ export default function QuestionFilters({
   setTopicFilter,
   levelFilter,
   setLevelFilter,
+  attemptFilter,
+  setAttemptFilter,
+  showAttemptFilter = false,
   topics,
   levels
 }) {
@@ -45,6 +48,18 @@ export default function QuestionFilters({
             <option key={l} value={l}>{l}</option>
           ))}
         </select>
+
+        {showAttemptFilter && (
+          <select
+            value={attemptFilter}
+            onChange={(e) => setAttemptFilter(e.target.value)}
+            className="border px-3 py-2 rounded-lg"
+          >
+            <option value="">All Attempts</option>
+            <option value="attempted">Attempted</option>
+            <option value="not_attempted">Not Attempted</option>
+          </select>
+        )}
 
       </div>
 

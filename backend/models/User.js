@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema({
     required: true
   },
 
+  assignedTutor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
+
   isVerified: {
     type: Boolean,
     default: false

@@ -4,24 +4,30 @@ export default function ReviewCard({ submission }) {
   const navigate = useNavigate();
 
   const isReviewed = submission.review_status === "reviewed";
+  const question = submission.questionId || {};
+  const student = submission.studentId || {};
 
-  const maxMarks =
-    submission.questionId.model_answer.steps.reduce(
-      (sum, step) => sum + step.marks,
+  const maxMarks = question.total_marks ??
+    (question.model_answer?.steps || []).reduce(
+      (sum, step) => sum + (step.marks || 0),
       0
-    ) + submission.questionId.final_answer_marks;
+    ) + (question.final_answer_marks || 0);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow">
 
       {/* Title */}
       <h3 className="font-semibold">
-        {submission.questionId.title}
+        {question.title || "Question unavailable"}
       </h3>
 
       {/* Status */}
       <p className="text-sm text-gray-500">
         Status: {submission.review_status}
+      </p>
+
+      <p className="text-sm text-gray-500 mt-1">
+        Student: {student.name || "Unknown student"}
       </p>
 
       {/* Date */}

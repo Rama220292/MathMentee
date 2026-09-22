@@ -39,8 +39,7 @@ export default function SubmissionsFilters({
           onChange={(e) => setStatusFilter(e.target.value)}
           className="border p-2 rounded"
         >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
+          <option value="">All Review Statuses</option>
           <option value="ai_graded">AI Graded</option>
           <option value="reviewed">Reviewed</option>
         </select>

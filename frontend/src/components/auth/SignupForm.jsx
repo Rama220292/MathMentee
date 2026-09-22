@@ -32,6 +32,11 @@ export default function SignupForm() {
   });
 
   const onSubmit = async (data) => {
+    if (data.role === "student") {
+      navigate("/signup/select-tutor", { state: { signupData: data } });
+      return;
+    }
+
     setLoading(true);
 
     try {

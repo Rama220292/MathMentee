@@ -25,9 +25,31 @@ const updateSubmissionSchema = Joi.object({
 
 // REVIEW (teacher grading)
 const reviewSubmissionSchema = Joi.object({
-  teacher_score: Joi.number().min(0).required(),
+  tutor_score: Joi.number().min(0).required(),
 
-  teacher_feedback: Joi.string().allow("").required()
+  tutor_feedback: Joi.string().allow("").required()
 });
 
-module.exports = { createSubmissionSchema, updateSubmissionSchema, reviewSubmissionSchema };
+const submissionImageUploadRequestSchema = Joi.object({
+  questionId: Joi.string().hex().length(24).required(),
+  contentType: Joi.string().valid("image/png").required(),
+  size: Joi.number().integer().min(1).max(10 * 1024 * 1024).required()
+});
+
+const submissionImageUploadConfirmationSchema = Joi.object({
+  uploadId: Joi.string().hex().length(24).required()
+});
+
+const transcriptSchema = Joi.object({
+  steps: Joi.array().items(Joi.string().trim().min(1)).min(1).required(),
+  final_answer: Joi.string().trim().min(1).required()
+});
+
+module.exports = {
+  createSubmissionSchema,
+  reviewSubmissionSchema,
+  submissionImageUploadConfirmationSchema,
+  submissionImageUploadRequestSchema,
+  transcriptSchema,
+  updateSubmissionSchema
+};
