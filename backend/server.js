@@ -1,6 +1,7 @@
+const { loadEnvironment } = require("./config/environment");
+loadEnvironment();
+
 const express = require("express");
-const dotenv = require("dotenv");
-dotenv.config();
 const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 5000;

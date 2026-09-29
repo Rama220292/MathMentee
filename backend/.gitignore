@@ -3,6 +3,9 @@
 
 ### dotenv ###
 .env
+.env.*
+!.env.example
+!.env.*.example
 
 ### Java ###
 # Compiled class file

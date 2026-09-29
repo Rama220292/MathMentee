@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const { buildVerificationLink } = require("./verificationLinkService");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -18,31 +19,11 @@ transporter.verify((error, success) => {
   }
 });
 
-// const sendVerificationEmail = async (email, token) => {
-//   const verificationLink = `${process.env.FRONTEND_URL}/verify?token=${token}`;
-//   try {
-//       console.log("Sending email to:", email);
-//       await transporter.sendMail({
-//         from: process.env.EMAIL_USER,
-//         to: email,
-//         subject: "Verify your MathMentor account",
-//         html: `
-//           <h2>Email Verification</h2>
-//           <p>Click the link below to verify your MathMentor account:</p>
-//           <a href="${verificationLink}">${verificationLink}</a>
-//         `,
-//       });
-
-//   } catch (err) {
-//     console.error("EMAIL SEND ERROR:", err);
-//   }
-// };
-
 const sendVerificationEmail = async (email, token) => {
   try {
     console.log("Sending email to:", email);
 
-    const verificationLink = `${process.env.FRONTEND_URL}/verify?token=${token}`;
+    const verificationLink = buildVerificationLink(token);
 
     const info = await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -59,6 +40,7 @@ const sendVerificationEmail = async (email, token) => {
 
   } catch (err) {
     console.error("EMAIL ERROR:", err);
+    throw err;
   }
 };
 
