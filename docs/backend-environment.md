@@ -19,3 +19,6 @@ For Render, set `FRONTEND_URL` on the API service to the deployed frontend origi
 then restart or redeploy the API. Keep `CORS_ORIGIN` aligned separately. Correcting
 the setting does not repair links in emails already sent. Environment files and
 SMTP credentials must remain uncommitted.
+
+See [Render staging and production](render-deployment.md) for manual staging setup,
+required storage settings, and releases to the existing production deployment.
