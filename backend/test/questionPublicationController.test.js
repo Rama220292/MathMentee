@@ -172,7 +172,7 @@ test("does not publish an unreviewed extracted draft", async () => {
   assert.match(response.body.err, /Review and save/);
 });
 
-test("non-content-managers list published questions only", async () => {
+test("students list published questions only", async () => {
   let receivedFilter;
   const questions = [{ _id: "507f191e810c19729de860eb", isPublished: true }];
   const query = {
@@ -189,7 +189,7 @@ test("non-content-managers list published questions only", async () => {
   const response = createResponse();
 
   await getQuestions({
-    user: { role: "teacher" },
+    user: { role: "student" },
     query: {}
   }, response);
 
@@ -197,7 +197,10 @@ test("non-content-managers list published questions only", async () => {
     isPublished: true,
     archived_at: null
   });
-  assert.deepEqual(response.body, questions);
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.length, 1);
+  assert.equal(response.body[0]._id, questions[0]._id);
+  assert.equal("isPublished" in response.body[0], false);
 });
 
 test("student question responses exclude answers and authoring metadata", async () => {
@@ -215,6 +218,7 @@ test("student question responses exclude answers and authoring metadata", async 
     final_answer_marks: 1,
     authoring_status: "published",
     extraction: { provider: "openai" },
+    source_asset: { object_key: "private/question.png" },
     created_by: "507f1f77bcf86cd799439011",
     isPublished: true
   };
@@ -238,7 +242,7 @@ test("student question responses exclude answers and authoring metadata", async 
   }]);
 });
 
-test("non-content-managers cannot fetch an unpublished question by id", async () => {
+test("students cannot fetch an unpublished question by id", async () => {
   const question = {
     _id: "507f191e810c19729de860eb",
     isPublished: false
@@ -258,6 +262,68 @@ test("non-content-managers cannot fetch an unpublished question by id", async ()
   assert.equal(response.statusCode, 404);
   assert.deepEqual(response.body, { err: "Question not found" });
 });
+
+for (const role of ["teacher", "content_manager"]) {
+  for (const archived of [false, true]) {
+    test(`${role} can list ${archived ? "archived" : "active draft"} questions with authoring data`, async () => {
+      let receivedFilter;
+      let selectedFields;
+      const question = {
+        _id: "507f191e810c19729de860eb",
+        isPublished: false,
+        model_answer: { final_answer: "x = 3" },
+        source_asset: { object_key: "private/question.png" },
+        extraction: { status: "completed" }
+      };
+      const query = {
+        select(fields) { selectedFields = fields; return this; },
+        then(resolve, reject) { return Promise.resolve([question]).then(resolve, reject); }
+      };
+      const { getQuestions } = loadController({
+        find(filter) { receivedFilter = filter; return query; }
+      });
+      const response = createResponse();
+
+      await getQuestions({ user: { role }, query: { archived: String(archived) } }, response);
+
+      assert.equal(response.statusCode, 200);
+      assert.deepEqual(receivedFilter, { archived_at: archived ? { $ne: null } : null });
+      assert.equal(selectedFields, "+source_asset");
+      assert.deepEqual(response.body[0], { ...question, has_unpublished_changes: false });
+    });
+  }
+
+  test(`${role} can fetch draft and archived questions and see pending edits`, async () => {
+    for (const state of ["draft", "archived", "pending edits"]) {
+      let selectedFields;
+      const question = {
+        _id: "507f191e810c19729de860eb",
+        title: "Current draft title",
+        isPublished: state === "pending edits",
+        archived_at: state === "archived" ? new Date() : null,
+        current_version: "new-version",
+        published_version: "old-version",
+        model_answer: { final_answer: "x = 3" },
+        source_asset: { object_key: "private/question.png" }
+      };
+      const query = {
+        select(fields) { selectedFields = fields; return this; },
+        then(resolve, reject) { return Promise.resolve(question).then(resolve, reject); }
+      };
+      const { getQuestionById } = loadController({ findById: () => query });
+      const response = createResponse();
+
+      await getQuestionById({ user: { role }, params: { id: question._id } }, response);
+
+      assert.equal(response.statusCode, 200);
+      assert.equal(selectedFields, "+source_asset");
+      assert.equal(response.body.title, question.title);
+      assert.deepEqual(response.body.model_answer, question.model_answer);
+      assert.deepEqual(response.body.source_asset, question.source_asset);
+      assert.equal(response.body.has_unpublished_changes, state === "pending edits");
+    }
+  });
+}
 
 test("archives without deleting the question", async () => {
   const question = {

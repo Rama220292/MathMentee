@@ -1,3 +1,4 @@
+import { isQuestionAuthor } from "../../utils/permissions";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -76,7 +77,7 @@ export default function Navbar() {
           </>
         )}
 
-        {role === "content_manager" && (
+        {isQuestionAuthor(role) && (
           <NavLink to="/questions/create" className={navBtn}>
             <FileText size={16} />
             Create Question

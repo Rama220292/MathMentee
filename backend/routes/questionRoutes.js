@@ -3,6 +3,7 @@ const router = express.Router();
 
 const verifyToken = require("../middleware/verifyToken");
 const verifyRole = require("../middleware/verifyRole");
+const { QUESTION_AUTHOR_ROLES } = require("../config/permissions");
 const validate = require("../middleware/validate");
 const {
   createQuestionSchema,
@@ -15,19 +16,19 @@ const {
 const questionController = require("../controllers/questionController");
 const { objectIdSchema } = require("../validators/commonValidator");
 
-router.post("/", verifyToken, verifyRole("content_manager"), validate(createQuestionSchema), questionController.createQuestion);
-router.put("/:id", verifyToken, verifyRole("content_manager"), validate(updateQuestionSchema), questionController.updateQuestion);
+router.post("/", verifyToken, verifyRole(...QUESTION_AUTHOR_ROLES), validate(createQuestionSchema), questionController.createQuestion);
+router.put("/:id", verifyToken, verifyRole(...QUESTION_AUTHOR_ROLES), validate(updateQuestionSchema), questionController.updateQuestion);
 router.patch(
   "/:id/publication",
   verifyToken,
-  verifyRole("content_manager"),
+  verifyRole(...QUESTION_AUTHOR_ROLES),
   validate(questionPublicationSchema),
   questionController.setQuestionPublication
 );
 router.patch(
   "/:id/archive",
   verifyToken,
-  verifyRole("content_manager"),
+  verifyRole(...QUESTION_AUTHOR_ROLES),
   validate(questionArchiveSchema),
   questionController.setQuestionArchive
 );
@@ -36,21 +37,21 @@ router.get("/meta/options", verifyToken, questionController.getQuestionMeta);
 router.post(
   "/image-upload-requests",
   verifyToken,
-  verifyRole("content_manager"),
+  verifyRole(...QUESTION_AUTHOR_ROLES),
   validate(questionImageUploadRequestSchema),
   questionController.createQuestionImageUploadRequest
 );
 router.post(
   "/image-upload-confirmations",
   verifyToken,
-  verifyRole("content_manager"),
+  verifyRole(...QUESTION_AUTHOR_ROLES),
   validate(questionImageUploadConfirmationSchema),
   questionController.confirmQuestionImageUpload
 );
 router.post(
   "/:id/extractions",
   verifyToken,
-  verifyRole("content_manager"),
+  verifyRole(...QUESTION_AUTHOR_ROLES),
   validate(objectIdSchema),
   questionController.extractQuestionDraft
 );

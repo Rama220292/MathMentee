@@ -1,13 +1,13 @@
 import { useForm } from "react-hook-form";
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signup } from "../../services/authService";
+import { getSignupOptions, signup } from "../../services/authService";
 import { Mail, Lock, User } from "lucide-react";
 import toast from "react-hot-toast"
 
-const schema = z.object({
+const createSchema = (roles) => z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email"),
   password: z.string()
@@ -16,19 +16,32 @@ const schema = z.object({
     .regex(/[A-Z]/, "Must include uppercase")
     .regex(/[0-9]/, "Must include number")
     .regex(/[^a-zA-Z0-9]/, "Must include special character"),
-  role: z.enum(["student", "teacher", "content_manager"])
+  role: z.enum(roles)
 });
 
 export default function SignupForm() {
   const [loading, setLoading] = useState(false);
+  const [signupRoles, setSignupRoles] = useState(["student", "teacher"]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+    getSignupOptions()
+      .then(({ roles }) => {
+        if (active) setSignupRoles(roles);
+      })
+      .catch(() => {
+        // Keep content-manager signup disabled if options cannot be loaded.
+      });
+    return () => { active = false; };
+  }, []);
 
   const {
     register,
     handleSubmit,
     formState: { errors }
   } = useForm({
-    resolver: zodResolver(schema)
+    resolver: zodResolver(createSchema(signupRoles))
   });
 
   const onSubmit = async (data) => {
@@ -153,7 +166,9 @@ export default function SignupForm() {
               <option value="">Select role</option>
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
-              <option value="content_manager">Content Manager</option>
+              {signupRoles.includes("content_manager") && (
+                <option value="content_manager">Content Manager</option>
+              )}
             </select>
             <p className="text-red-500 text-sm mt-1">
               {errors.role?.message}

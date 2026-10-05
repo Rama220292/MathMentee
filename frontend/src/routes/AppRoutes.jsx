@@ -1,3 +1,4 @@
+import { QUESTION_AUTHOR_ROLES } from "../utils/permissions";
 import { Routes, Route } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
@@ -50,8 +51,8 @@ export default function AppRoutes() {
           <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
         </Route>
 
-        {/* Content-manager-only question authoring */}
-        <Route element={<RoleGuard roles={["content_manager"]} />}>
+        {/* Teacher and content-manager question authoring */}
+        <Route element={<RoleGuard roles={QUESTION_AUTHOR_ROLES} />}>
           <Route path="/questions/create" element={<CreateQuestionPage />} />
         </Route>
 

@@ -2,6 +2,7 @@ const mongoose = require("mongoose")
 const Question = require("../models/Question");
 const QuestionVersion = require("../models/QuestionVersion");
 const QuestionImageUpload = require("../models/QuestionImageUpload");
+const { isQuestionAuthor } = require("../config/permissions");
 const {
   createQuestionImageUpload,
   verifyQuestionImageUpload
@@ -29,7 +30,7 @@ const questionResponse = async (question, role) => {
     ? question.toObject()
     : { ...question };
 
-  if (role === "content_manager") {
+  if (isQuestionAuthor(role)) {
     return {
       ...data,
       has_unpublished_changes: Boolean(
@@ -85,7 +86,7 @@ const getQuestions = async (req, res) => {
 
     let filter = {};
 
-    if (req.user.role !== "content_manager") {
+    if (!isQuestionAuthor(req.user.role)) {
       filter.isPublished = true;
       filter.archived_at = null;
     } else {
@@ -96,7 +97,7 @@ const getQuestions = async (req, res) => {
     if (level) filter.level = level;
 
     const query = Question.find(filter);
-    if (req.user.role === "content_manager") query.select("+source_asset");
+    if (isQuestionAuthor(req.user.role)) query.select("+source_asset");
     const questions = await query;
 
     res.json(await Promise.all(
@@ -113,7 +114,7 @@ const getQuestions = async (req, res) => {
 const getQuestionById = async (req, res) => {
   try {
     const query = Question.findById(req.params.id);
-    if (req.user.role === "content_manager") query.select("+source_asset");
+    if (isQuestionAuthor(req.user.role)) query.select("+source_asset");
     const question = await query;
 
     if (!question) {
@@ -121,7 +122,7 @@ const getQuestionById = async (req, res) => {
     }
 
     if (
-      req.user.role !== "content_manager" &&
+      !isQuestionAuthor(req.user.role) &&
       (!question.isPublished || question.archived_at)
     ) {
       return res.status(404).json({ err: "Question not found" });

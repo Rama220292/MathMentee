@@ -1,3 +1,4 @@
+import { isQuestionAuthor } from "../../utils/permissions";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom"
 import toast from "react-hot-toast";
@@ -70,7 +71,7 @@ export default function QuestionCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-semibold">{question.title}</h2>
-          {user?.role === "content_manager" && (
+          {isQuestionAuthor(user?.role) && (
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                 isArchived
@@ -126,8 +127,8 @@ export default function QuestionCard({
                       </button>
                     )}
 
-                    {/* Content manager view */}
-                    {user?.role === "content_manager" && (
+                    {/* Teacher and content manager view */}
+                    {isQuestionAuthor(user?.role) && (
                       <div className="flex gap-2">
                         <button
                             onClick={() => navigate(`/questions/${question._id}`)}
@@ -221,8 +222,8 @@ export default function QuestionCard({
               publicationTarget && question.has_unpublished_changes
                 ? "Publish the latest saved version? New attempts will use it, while previous submissions remain tied to the version they originally used."
                 : !publicationTarget
-                ? "Unpublish this question? Students and tutors will no longer be able to access it."
-                : "Publish this question? Students and tutors will be able to discover and practise it."
+                ? "Unpublish this question? Students will no longer be able to access it."
+                : "Publish this question? Students will be able to discover and practise it."
             }
             confirmText={publicationTarget && question.has_unpublished_changes
               ? "Publish changes"

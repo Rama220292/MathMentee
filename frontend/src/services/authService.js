@@ -11,6 +11,11 @@ export const signup = async (data) => {
   return res.data;
 };
 
+export const getSignupOptions = async () => {
+  const res = await api.get("/auth/signup-options");
+  return res.data;
+};
+
 export const getTutors = async () => {
   const res = await api.get("/auth/tutors");
   return res.data;

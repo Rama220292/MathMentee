@@ -4,12 +4,17 @@ const crypto = require("crypto");
 
 const User = require("../models/User");
 const { sendVerificationEmail } = require("../services/emailService");
+const { getSignupRoles } = require("../config/registration");
 
 const saltRounds = 11;
 
 const signup = async (req, res) => {
   try {
     const { name, email, password, role, tutorId } = req.body;
+
+    if (!getSignupRoles().includes(role)) {
+      return res.status(403).json({ err: "Content manager signup is currently disabled" });
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -130,4 +135,9 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-module.exports = { getTutors, signup, login, verifyEmail };
+const getSignupOptions = (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json({ roles: getSignupRoles() });
+};
+
+module.exports = { getTutors, signup, login, verifyEmail, getSignupOptions };

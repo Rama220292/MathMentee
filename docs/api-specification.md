@@ -21,6 +21,7 @@ Base path: `/api`. All request and response bodies are JSON. Protected endpoints
 | Method | Path | Auth | Purpose |
 | --- | --- | --- |
 | `POST` | `/auth/signup` | No | Register a student or teacher and send verification email |
+| `GET` | `/auth/signup-options` | No | Return currently enabled self-registration roles |
 | `POST` | `/auth/login` | No | Sign in and receive JWT plus basic user data |
 | `GET` | `/auth/tutors` | No | List registered tutors for student signup pairing |
 | `GET` | `/auth/verify?token=…` | No | Verify an email token |
@@ -34,6 +35,12 @@ Base path: `/api`. All request and response bodies are JSON. Protected endpoints
 Students must choose a registered teacher during signup. Teacher and content
 manager signup requests must not include `tutorId`.
 
+`GET /auth/signup-options` returns `{ "roles": ["student", "teacher"] }`
+by default. Content-manager signup requests return `403` while disabled.
+Setting the backend `ENABLE_CONTENT_MANAGER_SIGNUP=true` also includes
+`content_manager` in this response and enables registration for that role.
+Existing content-manager accounts can still verify their email and sign in.
+
 `POST /auth/login` response:
 
 ```json
@@ -44,22 +51,23 @@ manager signup requests must not include `tutorId`.
 
 | Method | Path | Role | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/questions` | Content manager | Create a ready, unpublished question |
+| `POST` | `/questions` | Teacher or content manager | Create a ready, unpublished question |
 | `GET` | `/questions` | Any signed-in user | List questions; supports `topic` and `level` query parameters |
 | `GET` | `/questions/:id` | Any signed-in user | Fetch a question |
-| `PUT` | `/questions/:id` | Content manager | Update question content without changing publication state |
-| `PATCH` | `/questions/:id/publication` | Content manager | Explicitly publish or unpublish a reviewed question |
-| `PATCH` | `/questions/:id/archive` | Content manager | Archive or restore a question without deleting its history |
-| `POST` | `/questions/image-upload-requests` | Content manager | Validate image metadata and create a short-lived private S3 upload URL |
-| `POST` | `/questions/image-upload-confirmations` | Content manager | Verify the uploaded S3 object and create an unpublished question draft |
+| `PUT` | `/questions/:id` | Teacher or content manager | Update question content without changing publication state |
+| `PATCH` | `/questions/:id/publication` | Teacher or content manager | Explicitly publish or unpublish a reviewed question |
+| `PATCH` | `/questions/:id/archive` | Teacher or content manager | Archive or restore a question without deleting its history |
+| `POST` | `/questions/image-upload-requests` | Teacher or content manager | Validate image metadata and create a short-lived private S3 upload URL |
+| `POST` | `/questions/image-upload-confirmations` | Teacher or content manager | Verify the uploaded S3 object and create an unpublished question draft |
 | `GET` | `/questions/meta/options` | Any signed-in user | Available topic and level values |
 
-Only content managers receive unpublished questions from `GET /questions` or
-`GET /questions/:id`. Students and tutors receive published questions only.
+Teachers and content managers receive unpublished questions from `GET /questions`
+or `GET /questions/:id`, and can list archived questions with `archived=true`.
+Students receive published, unarchived questions only.
 Student responses must exclude model answers, mark allocations, authoring
-metadata, extraction data, and original source assets. Tutors receive the
-approved marking information needed for review; content managers receive the
-full authoring representation.
+metadata, extraction data, and original source assets. Teachers and content
+managers receive the full authoring representation, including current draft
+content and whether saved changes await publication.
 
 Student submission responses contain the published question prompt, the
 student's own answer, and the automated score and feedback. They exclude the
@@ -91,11 +99,11 @@ Question request shape:
 Question wording and proposed answer strings may contain embedded LaTeX. Inline
 expressions use `\\(...\\)` and standalone expressions use `\\[...\\]`. The
 authoring interface must present these expressions through a visual equation
-editor and preview; content managers are not expected to edit LaTeX source.
+editor and preview; teachers and content managers are not expected to edit LaTeX source.
 Extracted mathematics remains untrusted draft content until reviewed.
 
 Creation and content updates never publish implicitly. After reviewing a ready
-question, the content manager changes visibility explicitly:
+question, the teacher or content manager changes visibility explicitly:
 
 ```json
 { "isPublished": true }
@@ -133,7 +141,7 @@ when uploading the file with `PUT`:
 {
   "uploadId": "<pending-upload-id>",
   "uploadUrl": "<short-lived presigned S3 URL>",
-  "objectKey": "question-source-images/<content-manager-id>/<upload-id>.png",
+  "objectKey": "question-source-images/<author-user-id>/<upload-id>.png",
   "expiresAt": "2026-08-06T02:05:00.000Z",
   "headers": { "Content-Type": "image/png" }
 }
@@ -166,13 +174,13 @@ size to match the original request before creating an unpublished question with
 ```
 
 The browser must never persist or expose `uploadUrl`, because it grants
-temporary write access to one object key. Student and tutor question responses
-exclude the private source-asset record; content managers may receive it for
-authoring operations.
+temporary write access to one object key. Student question responses exclude
+the private source-asset record; teachers and content managers may receive it
+for authoring operations.
 
 ### Extract a confirmed image draft
 
-`POST /api/questions/:id/extractions` requires the `content_manager` role and
+`POST /api/questions/:id/extractions` requires the `teacher` or `content_manager` role and
 ownership of the unpublished draft. The backend reads the private S3 object and
 sends it to the configured server-side OpenAI model. It returns editable
 question content, confidence, and review notes. Extraction is synchronous in
@@ -181,7 +189,7 @@ this first increment.
 The result is untrusted draft data containing extracted question content plus
 an AI-proposed worked solution, final answer, and suggested mark allocation.
 These answer and marking fields are not an authoritative marking scheme. The
-content manager must review and correct every field before the draft becomes
+teacher or content manager must review and correct every field before the draft becomes
 ready or is explicitly published.
 
 ## Submissions

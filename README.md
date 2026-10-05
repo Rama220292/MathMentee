@@ -165,4 +165,4 @@ The next phase of the project is to document and validate the product and techni
 
 ## Near-term direction
 
-MathMentee's target operating model is a tuition-centre product: content managers govern a shared question bank, tutors review and support students, and all students can access published questions. The current MVP still uses a single `teacher` role, so the next planning and implementation work will evolve the data model and permissions toward these distinct roles.
+MathMentee's operating model is a tuition-centre product: teachers and content managers manage a shared question bank, teachers review paired students' work, and all students can access published questions. Teachers currently share content managers' question-authoring and publishing rights. Content-manager self-registration is disabled by default and can be re-enabled with the backend `ENABLE_CONTENT_MANAGER_SIGNUP=true` setting; existing accounts retain their access.

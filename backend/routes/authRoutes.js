@@ -6,6 +6,7 @@ const validate = require("../middleware/validate");
 const { signupSchema, loginSchema } = require("../validators/authValidator");
 
 router.post("/signup",  validate(signupSchema), authController.signup);
+router.get("/signup-options", authController.getSignupOptions);
 router.post("/login", validate(loginSchema), authController.login);
 router.get("/tutors", authController.getTutors);
 router.get("/verify", authController.verifyEmail);

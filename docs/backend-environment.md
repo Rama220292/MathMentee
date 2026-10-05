@@ -22,3 +22,16 @@ SMTP credentials must remain uncommitted.
 
 See [Render staging and production](render-deployment.md) for manual staging setup,
 required storage settings, and releases to the existing production deployment.
+
+## Content-manager registration
+
+`ENABLE_CONTENT_MANAGER_SIGNUP` defaults to disabled when omitted. Keep it at
+`false` to disable the content-manager signup option and reject direct signup
+requests for that role. Existing content-manager accounts can still sign in and
+manage questions, and student and teacher registration remain available.
+
+To re-enable registration, set `ENABLE_CONTENT_MANAGER_SIGNUP=true` in
+`backend/.env` or the hosted API service environment, then restart or redeploy
+the backend. The frontend obtains the available roles from
+`GET /api/auth/signup-options`, so no frontend environment flag or rebuild is
+required. Only the exact value `true` enables registration.

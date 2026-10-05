@@ -1,3 +1,4 @@
+import { isQuestionAuthor } from "../../utils/permissions";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -140,7 +141,7 @@ export default function QuestionsPage() {
             Questions Dashboard
           </h1>
 
-          {user?.role === "content_manager" && (
+          {isQuestionAuthor(user?.role) && (
             <button
               onClick={() => navigate("/questions/create")}
               className="px-4 py-2 bg-indigo-500 text-white rounded-lg shadow hover:opacity-90"
@@ -150,7 +151,7 @@ export default function QuestionsPage() {
           )}
         </div>
 
-        {user?.role === "content_manager" && (
+        {isQuestionAuthor(user?.role) && (
           <div className="mb-4 flex gap-2" role="group" aria-label="Question status">
             <button
               type="button"
