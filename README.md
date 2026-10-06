@@ -139,15 +139,29 @@ Do not commit `.env` files or expose `OPENAI_API_KEY` in frontend environment va
 
 ## Deployment
 
-The repository includes deployment configuration for a Render API and a Netlify React site.
+MathMentee has three environments:
 
-1. Create a Render Blueprint from this repository. `render.yaml` creates the `mathmentee-api` service.
-2. In Render, provide `MONGO_URI`, `OPENAI_API_KEY`, `EMAIL_USER`, `EMAIL_PASS`, `FRONTEND_URL`, and `CORS_ORIGIN`. Render generates `JWT_SECRET`.
-3. Import the same repository into Netlify. `netlify.toml` supplies the frontend build settings and SPA redirect.
-4. In Netlify, set `VITE_BACK_END_SERVER_URL` to the deployed Render API URL.
-5. Set `FRONTEND_URL` and `CORS_ORIGIN` in Render to the production Netlify URL, then redeploy the API.
+| Environment | Branch | Backend | Frontend |
+| --- | --- | --- | --- |
+| Development | Local working branch | Local desktop, `http://localhost:5000` | Local desktop, `http://localhost:5173` |
+| Staging | `staging` | https://mathmentee-staging.onrender.com | https://staging--mathmentors.netlify.app (branch deploy) |
+| Production | `main` | https://mathmentors.onrender.com | https://mathmentors.netlify.app |
 
-After deployment, the API health check is available at `/health` and returns `{ "status": "ok" }`.
+Each hosted environment uses a separate Render backend. One Netlify project
+serves production from `main` and staging through a `staging` branch deploy.
+The staging URL follows Netlify’s default naming pattern and must be confirmed
+after deployment. Keep databases, private storage, and environment settings
+separate.
+Set `VITE_BACK_END_SERVER_URL` to the corresponding backend URL **with `/api`**.
+Set backend `FRONTEND_URL` and `CORS_ORIGIN` to that environment's frontend origin.
+
+See [environment setup and release workflow](docs/render-deployment.md) for
+configuration and promotion from `staging` to `main`. `netlify.toml` supplies
+shared frontend build and SPA rewrite settings. The existing `render.yaml`
+uses the former staging architecture and must not be applied as the current
+setup; use the documented dashboard configuration until it is updated.
+
+Each API exposes `/health`, returning `{ "status": "ok" }`.
 
 ## Product planning
 

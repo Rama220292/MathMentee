@@ -15,12 +15,19 @@ optional for hosted deployments.
 Development uses Node's watch mode so Bun's automatic environment loading does
 not preload a different file ahead of the application's loader.
 
-For Render, set `FRONTEND_URL` on the API service to the deployed frontend origin,
+For each Render backend, set `FRONTEND_URL` to its Netlify frontend origin,
 then restart or redeploy the API. Keep `CORS_ORIGIN` aligned separately. Correcting
 the setting does not repair links in emails already sent. Environment files and
 SMTP credentials must remain uncommitted.
 
-See [Render staging and production](render-deployment.md) for manual staging setup,
+Production uses `https://mathmentors.onrender.com` for the API and
+`https://mathmentors.netlify.app` for the frontend. Staging deploys the `staging`
+branch, with API `https://mathmentee-staging.onrender.com`; its Netlify branch-deploy
+URL is `https://staging--mathmentors.netlify.app` (confirm after deployment).
+Both frontends share the existing Netlify project, using context-specific API
+URLs. Development runs on the local desktop.
+
+See [the three environments](render-deployment.md) for setup,
 required storage settings, and releases to the existing production deployment.
 
 ## Content-manager registration

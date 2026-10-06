@@ -35,7 +35,7 @@ representations and the S3 object metadata; it does not store the image binary.
   `submission-source-images/<student-id>/<upload-id>.png`.
 - Store only the object key, verified content type, size, and audit timestamps
   in MongoDB. Do not store a public URL.
-- Use separate development and production buckets or strictly separated
+- Use separate development, staging, and production buckets or strictly separated
   prefixes and IAM policies.
 - Never expose AWS credentials through frontend code or `VITE_*` variables.
 

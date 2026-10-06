@@ -51,15 +51,16 @@ return that same draft.
 
 ## Bucket CORS
 
-S3 must allow the deployed frontend and local Vite development origin to send
-the presigned `PUT`. Replace the production example with the real Netlify URL:
+Each environment’s S3 storage must allow its corresponding frontend origin to
+send the presigned `PUT`. The production example is below. For staging, use its
+assigned Netlify origin; for local development, use `http://localhost:5173` in
+the development storage CORS configuration:
 
 ```json
 [
   {
     "AllowedOrigins": [
-      "https://<site-name>.netlify.app",
-      "http://localhost:5173"
+      "https://mathmentors.netlify.app"
     ],
     "AllowedMethods": ["PUT"],
     "AllowedHeaders": ["Content-Type"],

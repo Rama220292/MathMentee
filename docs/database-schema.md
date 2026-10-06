@@ -1,8 +1,8 @@
 # Database schema
 
 Application text data is stored in MongoDB. Deployed environments use a
-managed database configured through the backend-only `MONGO_URI`; development
-and production data must be separated. Private image binaries belong in S3,
+managed database configured through the backend-only `MONGO_URI`; development,
+staging, and production data must be separated. Private image binaries belong in S3,
 with MongoDB retaining only object references and metadata. Backup, restore,
 monitoring, and retention procedures must be established before a real-student
 pilot.

@@ -134,7 +134,7 @@ supports MongoDB Atlas through the backend-only `MONGO_URI`. Handwriting images
 are stored separately in private S3; MongoDB stores their object keys and text
 metadata rather than image binaries.
 
-Development and production must use separate databases and private S3 storage
+Development, staging, and production must use separate databases and private S3 storage
 boundaries. Before a pilot with real student data, production storage must have
 restricted service credentials and network access, monitoring, a documented
 backup and restoration procedure, and explicit retention/deletion rules.
